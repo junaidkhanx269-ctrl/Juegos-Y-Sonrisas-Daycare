@@ -1,6 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * Juegos Y Sonrisas Daycare - Roslindale, MA
  */
 
 import React, { useState } from 'react';
