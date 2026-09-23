@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, reinitSupabase } from '../lib/supabase';
 
 export interface GalleryImageItem {
   id: string;
@@ -20,7 +20,7 @@ interface AdminContextType {
   addGalleryImage: (file: File) => Promise<{ success: boolean; url?: string; message?: string }>;
   deleteGalleryImage: (idOrUrl: string) => Promise<{ success: boolean; message?: string }>;
   reorderGalleryImages: (newGallery: GalleryImageItem[]) => Promise<{ success: boolean }>;
-  saveCustomSupabaseConfig: (url: string, key: string) => void;
+  saveCustomSupabaseConfig: (url: string, key: string) => Promise<void>;
   resetImagesToDefault: () => void;
 }
 
@@ -74,9 +74,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved gallery', e);
-      }
+      } catch (e) {}
     }
     return DEFAULT_GALLERY;
   });
@@ -84,139 +82,157 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(isSupabaseConfigured());
 
-  // Fetch from Supabase site_settings table on mount
+  // Load config and settings from server API on mount
   useEffect(() => {
-    const fetchSettings = async () => {
+    const initData = async () => {
       setIsLoading(true);
-      const configured = isSupabaseConfigured();
-      setIsSupabaseActive(configured);
 
-      if (configured) {
-        try {
-          const { data, error } = await supabase.from('site_settings').select('*');
-          if (!error && data && data.length > 0) {
-            data.forEach((item: { key: string; value: string }) => {
-              if (item.key === 'hero_image' && item.value) {
-                setHeroImage(item.value);
-                localStorage.setItem('site_hero_image', item.value);
-              }
-              if (item.key === 'about_image' && item.value) {
-                setAboutImage(item.value);
-                localStorage.setItem('site_about_image', item.value);
-              }
-              if (item.key === 'gallery_images' && item.value) {
-                try {
-                  const parsed = JSON.parse(item.value);
-                  if (Array.isArray(parsed)) {
-                    setGalleryImages(parsed);
-                    localStorage.setItem('site_gallery_images', item.value);
-                  }
-                } catch (err) {
-                  console.error('Error parsing gallery JSON from DB', err);
-                }
-              }
-            });
+      // 1. Fetch server-wide Supabase config
+      try {
+        const confRes = await fetch('/api/config');
+        if (confRes.ok) {
+          const conf = await confRes.json();
+          if (conf.url && conf.key && conf.isConfigured) {
+            reinitSupabase(conf.url, conf.key);
+            localStorage.setItem('CUSTOM_SUPABASE_URL', conf.url);
+            localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', conf.key);
+            setIsSupabaseActive(true);
           }
-        } catch (err) {
-          console.warn('Could not query Supabase site_settings table', err);
         }
+      } catch (err) {
+        console.warn('Could not fetch /api/config', err);
       }
+
+      // 2. Fetch server-wide site settings
+      try {
+        const settingsRes = await fetch('/api/settings');
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          if (settings.hero_image) {
+            setHeroImage(settings.hero_image);
+            localStorage.setItem('site_hero_image', settings.hero_image);
+          }
+          if (settings.about_image) {
+            setAboutImage(settings.about_image);
+            localStorage.setItem('site_about_image', settings.about_image);
+          }
+          if (settings.gallery_images) {
+            try {
+              const parsed = typeof settings.gallery_images === 'string'
+                ? JSON.parse(settings.gallery_images)
+                : settings.gallery_images;
+              if (Array.isArray(parsed)) {
+                setGalleryImages(parsed);
+                localStorage.setItem('site_gallery_images', JSON.stringify(parsed));
+              }
+            } catch (e) {
+              console.error('Error parsing gallery images from server', e);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch /api/settings', err);
+      }
+
       setIsLoading(false);
     };
 
-    fetchSettings();
+    initData();
   }, []);
 
-  // Upload file helper to Supabase or fallback base64 DataURL
-  const uploadImageFile = async (file: File, folderPrefix = ''): Promise<string> => {
-    const configured = isSupabaseConfigured();
-
-    if (configured) {
-      try {
-        const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const fileName = `${folderPrefix}${Date.now()}-${cleanName}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('site-images')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.warn('Supabase upload error, falling back to local storage', uploadError);
-        } else {
-          const { data: publicUrlData } = supabase.storage
-            .from('site-images')
-            .getPublicUrl(fileName);
-
-          if (publicUrlData?.publicUrl) {
-            return publicUrlData.publicUrl;
-          }
-        }
-      } catch (err) {
-        console.error('Exception during Supabase upload', err);
-      }
-    }
-
-    // Fallback: Convert file to Base64 data URL for local storage
+  // Helper to convert File to Base64
+  const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (err) => reject(err);
       reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
     });
   };
 
-  // Helper to upsert site_settings in Supabase
-  const updateSettingInDb = async (key: string, value: string) => {
-    if (isSupabaseConfigured()) {
-      try {
-        await supabase.from('site_settings').upsert(
-          { key, value, updated_at: new Date().toISOString() },
-          { onConflict: 'key' }
-        );
-      } catch (err) {
-        console.error(`Failed to update site_settings key ${key} in Supabase`, err);
-      }
+  // Upload file via server endpoint (uploads to Supabase bucket AND server disk)
+  const uploadImageFile = async (file: File, folderPrefix = ''): Promise<{ url: string; isSupabase: boolean }> => {
+    const fileData = await fileToBase64(file);
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileData,
+        folderPrefix,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Upload failed on server endpoint');
+    }
+
+    const data = await res.json();
+    return { url: data.url, isSupabase: data.isSupabase };
+  };
+
+  // Save key-value setting to server and Supabase
+  const saveSetting = async (key: string, value: string) => {
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value }),
+      });
+    } catch (err) {
+      console.error('Error calling /api/settings', err);
     }
   };
 
-  // Task 3: Update Hero Image
+  // Update Hero Image
   const updateHeroImage = async (file: File) => {
     try {
-      const publicUrl = await uploadImageFile(file);
-      setHeroImage(publicUrl);
-      localStorage.setItem('site_hero_image', publicUrl);
-      await updateSettingInDb('hero_image', publicUrl);
-      return { success: true, url: publicUrl, message: 'Hero image permanently updated!' };
-    } catch (err) {
+      const { url, isSupabase } = await uploadImageFile(file);
+      setHeroImage(url);
+      localStorage.setItem('site_hero_image', url);
+      await saveSetting('hero_image', url);
+
+      return {
+        success: true,
+        url,
+        message: isSupabase
+          ? 'Hero image permanently saved to Supabase & synced across all devices!'
+          : 'Hero image saved to permanent server storage!',
+      };
+    } catch (err: any) {
       console.error(err);
-      return { success: false, message: 'Failed to process image upload.' };
+      return { success: false, message: err.message || 'Failed to update hero image.' };
     }
   };
 
-  // Task 3: Update About Image
+  // Update About Image
   const updateAboutImage = async (file: File) => {
     try {
-      const publicUrl = await uploadImageFile(file);
-      setAboutImage(publicUrl);
-      localStorage.setItem('site_about_image', publicUrl);
-      await updateSettingInDb('about_image', publicUrl);
-      return { success: true, url: publicUrl, message: 'About image permanently updated!' };
-    } catch (err) {
+      const { url, isSupabase } = await uploadImageFile(file);
+      setAboutImage(url);
+      localStorage.setItem('site_about_image', url);
+      await saveSetting('about_image', url);
+
+      return {
+        success: true,
+        url,
+        message: isSupabase
+          ? 'About image permanently saved to Supabase & synced across all devices!'
+          : 'About image saved to permanent server storage!',
+      };
+    } catch (err: any) {
       console.error(err);
-      return { success: false, message: 'Failed to process image upload.' };
+      return { success: false, message: err.message || 'Failed to update about image.' };
     }
   };
 
-  // Task 3: Add Gallery Image
+  // Add Gallery Image
   const addGalleryImage = async (file: File) => {
     try {
-      const publicUrl = await uploadImageFile(file, 'gallery/');
+      const { url } = await uploadImageFile(file, 'gallery/');
       const newItem: GalleryImageItem = {
         id: `img-${Date.now()}`,
-        url: publicUrl,
+        url,
         title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
         uploadedAt: new Date().toISOString(),
       };
@@ -225,16 +241,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setGalleryImages(updatedGallery);
       const jsonStr = JSON.stringify(updatedGallery);
       localStorage.setItem('site_gallery_images', jsonStr);
-      await updateSettingInDb('gallery_images', jsonStr);
+      await saveSetting('gallery_images', jsonStr);
 
-      return { success: true, url: publicUrl, message: 'Gallery image added permanently!' };
-    } catch (err) {
+      return { success: true, url, message: 'Gallery image permanently uploaded and synced across devices!' };
+    } catch (err: any) {
       console.error(err);
-      return { success: false, message: 'Failed to add image to gallery.' };
+      return { success: false, message: err.message || 'Failed to add gallery image.' };
     }
   };
 
-  // Task 3: Delete Gallery Image
+  // Delete Gallery Image
   const deleteGalleryImage = async (idOrUrl: string) => {
     try {
       const updatedGallery = galleryImages.filter(
@@ -243,46 +259,43 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setGalleryImages(updatedGallery);
       const jsonStr = JSON.stringify(updatedGallery);
       localStorage.setItem('site_gallery_images', jsonStr);
-      await updateSettingInDb('gallery_images', jsonStr);
+      await saveSetting('gallery_images', jsonStr);
 
-      // Attempt to delete from Supabase storage if URL belongs to site-images
-      if (isSupabaseConfigured() && idOrUrl.includes('site-images')) {
-        try {
-          const parts = idOrUrl.split('site-images/');
-          if (parts.length > 1) {
-            const filePath = parts[1];
-            await supabase.storage.from('site-images').remove([filePath]);
-          }
-        } catch (e) {
-          console.warn('Storage delete warning', e);
-        }
-      }
-
-      return { success: true, message: 'Image removed from gallery.' };
-    } catch (err) {
+      return { success: true, message: 'Image deleted from gallery.' };
+    } catch (err: any) {
       console.error(err);
-      return { success: false, message: 'Failed to delete gallery image.' };
+      return { success: false, message: err.message || 'Failed to delete image.' };
     }
   };
 
-  // Task 3: Reorder Gallery Images
+  // Reorder Gallery Images
   const reorderGalleryImages = async (newGallery: GalleryImageItem[]) => {
     setGalleryImages(newGallery);
     const jsonStr = JSON.stringify(newGallery);
     localStorage.setItem('site_gallery_images', jsonStr);
-    await updateSettingInDb('gallery_images', jsonStr);
+    await saveSetting('gallery_images', jsonStr);
     return { success: true };
   };
 
-  // Save custom dynamic keys
-  const saveCustomSupabaseConfig = (url: string, key: string) => {
-    if (url) localStorage.setItem('CUSTOM_SUPABASE_URL', url.trim());
-    else localStorage.removeItem('CUSTOM_SUPABASE_URL');
+  // Save custom Supabase credentials to server so ALL devices get configured instantly!
+  const saveCustomSupabaseConfig = async (url: string, key: string) => {
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, key }),
+      });
 
-    if (key) localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', key.trim());
-    else localStorage.removeItem('CUSTOM_SUPABASE_ANON_KEY');
-
-    window.location.reload();
+      if (res.ok) {
+        reinitSupabase(url, key);
+        localStorage.setItem('CUSTOM_SUPABASE_URL', url);
+        localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', key);
+        setIsSupabaseActive(true);
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Failed to save Supabase config to server', err);
+    }
   };
 
   const resetImagesToDefault = () => {
@@ -292,9 +305,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.removeItem('site_hero_image');
     localStorage.removeItem('site_about_image');
     localStorage.removeItem('site_gallery_images');
-    updateSettingInDb('hero_image', DEFAULT_HERO_IMAGE);
-    updateSettingInDb('about_image', DEFAULT_ABOUT_IMAGE);
-    updateSettingInDb('gallery_images', JSON.stringify(DEFAULT_GALLERY));
+    saveSetting('hero_image', DEFAULT_HERO_IMAGE);
+    saveSetting('about_image', DEFAULT_ABOUT_IMAGE);
+    saveSetting('gallery_images', JSON.stringify(DEFAULT_GALLERY));
   };
 
   return (

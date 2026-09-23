@@ -122,7 +122,7 @@ CREATE POLICY "Allow public insert/update site_settings"
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-[11px] text-[#8B4513]">
-              Credentials can also be placed in <code className="bg-[#FFF8E7] px-1.5 py-0.5 rounded border border-[#8B4513]/20 font-mono">.env</code>
+              Credentials entered here automatically save to the server and sync across <strong>all mobile phones, tablets, and computers</strong>.
             </span>
             <button
               type="submit"
