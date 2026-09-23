@@ -1,11 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const DEFAULT_URL = 'https://placeholder.supabase.co';
+export const DEFAULT_URL = 'https://zicyrtlnulgnsqycgzpl.supabase.co';
 export const DEFAULT_KEY = 'placeholder-key';
 
 export const sanitizeUrl = (rawUrl?: string): string => {
   if (!rawUrl) return DEFAULT_URL;
-  let url = rawUrl.trim();
+  let url = rawUrl.trim().replace(/\/+$/, '');
   if (!url) return DEFAULT_URL;
   if (url === 'https://YOUR_PROJECT.supabase.co' || url === 'YOUR_PROJECT') {
     return DEFAULT_URL;

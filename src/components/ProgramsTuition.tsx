@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, Star, Calculator, HelpCircle, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Language } from '../types';
 import { PROGRAMS } from '../data/translations';
+import { useAdmin } from '../context/AdminContext';
 
 interface ProgramsTuitionProps {
   language: Language;
@@ -14,13 +15,20 @@ export const ProgramsTuition: React.FC<ProgramsTuitionProps> = ({
   onSelectProgramForEnrollment,
   onOpenTourModal,
 }) => {
+  const { siteContent } = useAdmin();
   const [selectedCalcTier, setSelectedCalcTier] = useState<string>('preschool-ready');
   const [calcExtendedCare, setCalcExtendedCare] = useState<boolean>(false);
   const [billingPeriod, setBillingPeriod] = useState<'weekly' | 'monthly'>('weekly');
 
-  const currentTier = PROGRAMS.find((p) => p.id === selectedCalcTier) || PROGRAMS[1];
-  const weeklyBase = currentTier.pricePerWeek;
-  const weeklyExtended = calcExtendedCare ? 104 : 0;
+  const getPrice = (id: string) => {
+    if (id === 'infants-toddlers') return siteContent.infantRate;
+    if (id === 'preschool-ready') return siteContent.preschoolRate;
+    if (id === 'school-age') return siteContent.schoolAgeRate;
+    return 464;
+  };
+
+  const weeklyBase = getPrice(selectedCalcTier);
+  const weeklyExtended = calcExtendedCare ? siteContent.extendedCareRate : 0;
   const weeklyTotal = weeklyBase + weeklyExtended;
   const monthlyTotal = Math.round((weeklyTotal * 52) / 12);
 
@@ -81,7 +89,7 @@ export const ProgramsTuition: React.FC<ProgramsTuitionProps> = ({
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl sm:text-5xl font-display font-bold text-[#1A237E] tabular-nums">
-                          ${program.pricePerWeek}
+                          ${getPrice(program.id)}
                         </span>
                         <span className="text-xs sm:text-sm text-[#1A237E]/70 font-semibold">
                           /{language === 'en' ? 'week' : 'sem'}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Globe, Calendar, Menu, X, ShieldCheck } from 'lucide-react';
+import { Phone, Globe, Calendar, Menu, X, ShieldCheck, Megaphone } from 'lucide-react';
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
 import { SmileyFace, BuildingBlocksIcon } from './Doodles';
+import { useAdmin } from '../context/AdminContext';
 
 interface HeaderProps {
   language: Language;
@@ -15,6 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLanguageChange,
   onOpenTourModal,
 }) => {
+  const { siteContent } = useAdmin();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -36,14 +38,31 @@ export const Header: React.FC<HeaderProps> = ({
     { href: '#location', labelEn: 'Contact', labelEs: 'Contacto' },
   ];
 
+  const announcementMsg = language === 'en' ? siteContent.announcementEn : siteContent.announcementEs;
+
   return (
-    <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-[#FFF8E7]/90 backdrop-blur-md shadow-sm border-b border-[#1A237E]/10 py-3'
-          : 'bg-[#FFF8E7]/60 backdrop-blur-xs py-4 md:py-5'
-      }`}
-    >
+    <>
+      {/* Top Editable Announcement Banner Bar */}
+      {siteContent.showAnnouncement && announcementMsg && (
+        <div className="bg-gradient-to-r from-[#8B4513] via-[#5D2E0C] to-[#1A237E] text-white py-2 px-4 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-inner">
+          <Megaphone className="w-3.5 h-3.5 text-[#FFD60A] shrink-0" />
+          <span>{announcementMsg}</span>
+          <button
+            onClick={onOpenTourModal}
+            className="underline text-[#FFD60A] hover:text-white ml-1.5 transition-colors cursor-pointer"
+          >
+            {language === 'en' ? 'Book Tour →' : 'Reservar Visita →'}
+          </button>
+        </div>
+      )}
+
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-[#FFF8E7]/90 backdrop-blur-md shadow-sm border-b border-[#1A237E]/10 py-3'
+            : 'bg-[#FFF8E7]/60 backdrop-blur-xs py-4 md:py-5'
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           
@@ -90,12 +109,12 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Direct Phone Call Link */}
             <a
-              href={`tel:${DAYCARE_INFO.phoneRaw}`}
+              href={`tel:${siteContent.phone.replace(/[^0-9]/g, '')}`}
               className="hidden sm:inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-[#1A237E] hover:text-[#FF6B6B] px-3 py-1.5 transition-colors"
-              title="Call Juegos Y Sonrisas Daycare"
+              title="Call Daycare"
             >
               <Phone className="w-4 h-4 text-[#FF6B6B]" />
-              <span className="tabular-nums">{DAYCARE_INFO.phone}</span>
+              <span className="tabular-nums">{siteContent.phone}</span>
             </a>
 
             {/* Bilingual Language Switcher EN | ES */}
@@ -180,11 +199,11 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
               <div className="pt-3 border-t border-[#1A237E]/10 flex flex-col gap-2.5">
                 <a
-                  href={`tel:${DAYCARE_INFO.phoneRaw}`}
+                  href={`tel:${siteContent.phone.replace(/[^0-9]/g, '')}`}
                   className="flex items-center gap-2 text-sm font-bold text-[#1A237E] py-2 px-2"
                 >
                   <Phone className="w-4 h-4 text-[#FF6B6B]" />
-                  <span>{DAYCARE_INFO.phone}</span>
+                  <span>{siteContent.phone}</span>
                 </a>
                 <a
                   href="/admin/login"
@@ -216,5 +235,6 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
     </header>
+    </>
   );
 };

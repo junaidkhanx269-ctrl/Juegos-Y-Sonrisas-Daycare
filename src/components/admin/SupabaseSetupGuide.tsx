@@ -15,7 +15,7 @@ export const SupabaseSetupGuide: React.FC = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const sqlSnippet = `
--- 1. Create the site_settings table for permanent image storage
+-- 1. Create the site_settings table for permanent image & content storage
 CREATE TABLE IF NOT EXISTS site_settings (
   id SERIAL PRIMARY KEY,
   key TEXT UNIQUE NOT NULL,
@@ -23,21 +23,42 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. Insert initial default settings
-INSERT INTO site_settings (key, value) VALUES 
-('hero_image', '/images/amelia-hero.jpg'),
-('about_image', '/images/amelia-hero.jpg'),
-('gallery_images', '[]')
-ON CONFLICT (key) DO NOTHING;
-
--- 3. Enable RLS and add public access policies
+-- 2. Enable RLS and add public access policies for site_settings
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public read site_settings" ON site_settings;
 CREATE POLICY "Allow public read site_settings" 
   ON site_settings FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Allow public insert/update site_settings" ON site_settings;
 CREATE POLICY "Allow public insert/update site_settings" 
   ON site_settings FOR ALL USING (true);
+
+-- 3. Create public site-images storage bucket
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('site-images', 'site-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- 4. Enable public policies on storage.objects for site-images
+DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
+CREATE POLICY "Public Read Access" 
+  ON storage.objects FOR SELECT 
+  USING (bucket_id = 'site-images');
+
+DROP POLICY IF EXISTS "Public Upload Access" ON storage.objects;
+CREATE POLICY "Public Upload Access" 
+  ON storage.objects FOR INSERT 
+  WITH CHECK (bucket_id = 'site-images');
+
+DROP POLICY IF EXISTS "Public Update Access" ON storage.objects;
+CREATE POLICY "Public Update Access" 
+  ON storage.objects FOR UPDATE 
+  USING (bucket_id = 'site-images');
+
+DROP POLICY IF EXISTS "Public Delete Access" ON storage.objects;
+CREATE POLICY "Public Delete Access" 
+  ON storage.objects FOR DELETE 
+  USING (bucket_id = 'site-images');
 `.trim();
 
   const handleCopySql = () => {
@@ -132,12 +153,29 @@ CREATE POLICY "Allow public insert/update site_settings"
           )}
 
           {/* Visual Helper Box */}
-          <div className="p-3.5 bg-[#FFF8E7] rounded-2xl border border-[#8B4513]/20 text-xs text-[#8B4513] space-y-1">
-            <p className="font-bold text-[#1A237E]">📌 Where to find these in Supabase Dashboard:</p>
-            <ul className="list-disc list-inside text-[11px] space-y-1 pl-1">
-              <li><strong>Project URL:</strong> Starts with <code className="bg-white px-1 rounded border border-[#8B4513]/20">https://</code> and ends in <code className="bg-white px-1 rounded border border-[#8B4513]/20">.supabase.co</code> (e.g. <code className="font-mono">https://xyzcompany.supabase.co</code>)</li>
-              <li><strong>Anon API Key:</strong> Starts with <code className="bg-white px-1 rounded border border-[#8B4513]/20">sb_publishable_...</code> or <code className="bg-white px-1 rounded border border-[#8B4513]/20">eyJ...</code></li>
-            </ul>
+          <div className="p-4 bg-[#FFF8E7] rounded-2xl border-2 border-[#8B4513]/25 text-xs text-[#8B4513] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#8B4513]/20 pb-2">
+              <div className="font-bold text-[#1A237E] flex items-center gap-1.5 text-sm">
+                <span>📌 How to copy your Project URL from Supabase:</span>
+              </div>
+              <a
+                href="https://supabase.com/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1A237E] hover:bg-[#283593] text-white text-[11px] font-bold rounded-lg transition-all shadow-sm shrink-0"
+              >
+                <span>Open Supabase Dashboard</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <ol className="list-decimal list-inside text-[11px] space-y-1.5 text-[#5D2E0C]">
+              <li>Log in to <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="underline font-bold text-[#1A237E]">supabase.com/dashboard</a> and click on your project.</li>
+              <li>Click the <strong>Settings (⚙️ Gear Icon)</strong> at the bottom left of the left sidebar.</li>
+              <li>Select <strong>API</strong> (under Project Settings).</li>
+              <li>Under <strong>Project URL</strong>, click the <strong>Copy</strong> button next to the URL (it looks like <code className="bg-white px-1 py-0.5 rounded border border-[#8B4513]/20 font-mono text-[#1A237E]">https://xxxx.supabase.co</code>).</li>
+              <li>Paste it into Box 1 below!</li>
+            </ol>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,13 +220,30 @@ CREATE POLICY "Allow public insert/update site_settings"
             <span className="text-[11px] text-[#8B4513]">
               Credentials entered here automatically save and sync across <strong>all mobile phones, tablets, and computers</strong>.
             </span>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-6 py-3 bg-[#8B4513] hover:bg-[#5D2E0C] text-[#FFF8DC] text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save & Connect Supabase</span>
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {isSupabaseActive && customUrl && customKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const syncUrl = `${window.location.origin}/admin#supaUrl=${encodeURIComponent(customUrl)}&supaKey=${encodeURIComponent(customKey)}`;
+                    navigator.clipboard.writeText(syncUrl);
+                    alert('Copied 1-Click Device Sync Link! Send this link to your other phone to instantly sync Supabase images and settings.');
+                  }}
+                  className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  title="Copy direct sync link for other phones"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy Phone Sync Link</span>
+                </button>
+              )}
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 bg-[#8B4513] hover:bg-[#5D2E0C] text-[#FFF8DC] text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save & Connect Supabase</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

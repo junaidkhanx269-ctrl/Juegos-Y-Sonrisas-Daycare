@@ -11,11 +11,13 @@ import {
   Menu,
   X,
   RotateCcw,
+  FileText,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { ImageManager } from '../components/admin/ImageManager';
 import { GalleryManager } from '../components/admin/GalleryManager';
 import { SupabaseSetupGuide } from '../components/admin/SupabaseSetupGuide';
+import { SiteContentManager } from '../components/admin/SiteContentManager';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -32,10 +34,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
     resetImagesToDefault,
   } = useAdmin();
 
-  const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'gallery' | 'supabase'>('hero');
+  const [activeTab, setActiveTab] = useState<'content' | 'hero' | 'about' | 'gallery' | 'supabase'>('content');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
+    { id: 'content', label: 'Site Content & Rates', icon: FileText, badge: 'Editable Text' },
     { id: 'hero', label: 'Hero Image Manager', icon: ImageIcon, badge: 'Main Banner' },
     { id: 'about', label: 'About Amelia Image', icon: UserCheck, badge: 'Director Bio' },
     { id: 'gallery', label: 'Gallery Manager', icon: Grid, badge: 'Photos' },
@@ -165,6 +168,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
 
           {/* Main Content Workspace */}
           <main className="lg:col-span-9 space-y-6">
+            {activeTab === 'content' && <SiteContentManager />}
+
             {activeTab === 'hero' && (
               <ImageManager
                 title="1. Hero Image Manager"

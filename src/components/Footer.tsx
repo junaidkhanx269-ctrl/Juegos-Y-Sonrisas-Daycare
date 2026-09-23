@@ -3,12 +3,14 @@ import { Mail, Check, Phone, MapPin, Clock, ShieldCheck, Heart } from 'lucide-re
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
 import { SmileyFace, BuildingBlocksIcon } from './Doodles';
+import { useAdmin } from '../context/AdminContext';
 
 interface FooterProps {
   language: Language;
 }
 
 export const Footer: React.FC<FooterProps> = ({ language }) => {
+  const { siteContent } = useAdmin();
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -53,7 +55,7 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
             <div className="pt-2 text-xs text-white/60 space-y-1 font-mono">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-[#A8E6CF]" />
-                <span>{DAYCARE_INFO.licenseState} #{DAYCARE_INFO.licenseNumber}</span>
+                <span>{siteContent.licenseState} #{siteContent.licenseNumber}</span>
               </div>
             </div>
           </div>
@@ -140,17 +142,17 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
             <div className="space-y-2 text-xs sm:text-sm text-white/80">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#FF6B6B] shrink-0" />
-                <span>{DAYCARE_INFO.address}</span>
+                <span>{siteContent.address}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#FFD60A] shrink-0" />
-                <a href={`tel:${DAYCARE_INFO.phoneRaw}`} className="hover:underline tabular-nums">
-                  {DAYCARE_INFO.phone}
+                <a href={`tel:${siteContent.phone.replace(/[^0-9]/g, '')}`} className="hover:underline tabular-nums">
+                  {siteContent.phone}
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#A8E6CF] shrink-0" />
-                <span>{language === 'en' ? DAYCARE_INFO.hoursEn : DAYCARE_INFO.hoursEs}</span>
+                <span>{language === 'en' ? siteContent.hoursEn : siteContent.hoursEs}</span>
               </div>
             </div>
 

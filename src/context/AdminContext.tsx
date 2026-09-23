@@ -9,10 +9,53 @@ export interface GalleryImageItem {
   category?: string;
 }
 
+export interface SiteContent {
+  name: string;
+  director: string;
+  phone: string;
+  email: string;
+  address: string;
+  licenseNumber: string;
+  licenseState: string;
+  hoursEn: string;
+  hoursEs: string;
+  taglineEn: string;
+  taglineEs: string;
+  announcementEn: string;
+  announcementEs: string;
+  showAnnouncement: boolean;
+  infantRate: number;
+  preschoolRate: number;
+  schoolAgeRate: number;
+  extendedCareRate: number;
+}
+
+export const DEFAULT_SITE_CONTENT: SiteContent = {
+  name: 'Juegos Y Sonrisas Daycare',
+  director: 'Amelia M Vargas',
+  phone: '+1 (857) 361-8923',
+  email: 'info@juegosysonrisas.com',
+  address: '48 Hazelton St, Mattapan, MA 02126',
+  licenseNumber: '9142647',
+  licenseState: 'Massachusetts Family Childcare License',
+  hoursEn: 'Monday – Friday: 8:00 AM – 5:00 PM',
+  hoursEs: 'Lunes – Viernes: 8:00 AM – 5:00 PM',
+  taglineEn: 'Where Learning is Full of Games & Smiles',
+  taglineEs: 'Donde Aprender es Juego y Sonrisas',
+  announcementEn: '🎉 Enrolling Now for 2026-2027! Schedule your private tour today in Mattapan, MA.',
+  announcementEs: '🎉 ¡Inscripciones Abiertas 2026-2027! Reserve su recorrido privado en Mattapan, MA.',
+  showAnnouncement: true,
+  infantRate: 503,
+  preschoolRate: 464,
+  schoolAgeRate: 361,
+  extendedCareRate: 104,
+};
+
 interface AdminContextType {
   heroImage: string;
   aboutImage: string;
   galleryImages: GalleryImageItem[];
+  siteContent: SiteContent;
   isLoading: boolean;
   isSupabaseActive: boolean;
   updateHeroImage: (file: File) => Promise<{ success: boolean; url?: string; message?: string }>;
@@ -20,6 +63,7 @@ interface AdminContextType {
   addGalleryImage: (file: File) => Promise<{ success: boolean; url?: string; message?: string }>;
   deleteGalleryImage: (idOrUrl: string) => Promise<{ success: boolean; message?: string }>;
   reorderGalleryImages: (newGallery: GalleryImageItem[]) => Promise<{ success: boolean }>;
+  updateSiteContent: (newContent: Partial<SiteContent>) => Promise<{ success: boolean }>;
   saveCustomSupabaseConfig: (url: string, key: string) => Promise<void>;
   resetImagesToDefault: () => void;
 }
@@ -79,6 +123,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return DEFAULT_GALLERY;
   });
 
+  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
+    const saved = localStorage.getItem('site_content_data');
+    if (saved) {
+      try {
+        return { ...DEFAULT_SITE_CONTENT, ...JSON.parse(saved) };
+      } catch (e) {}
+    }
+    return DEFAULT_SITE_CONTENT;
+  });
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(isSupabaseConfigured());
 
@@ -86,6 +140,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const initData = async () => {
       setIsLoading(true);
+
+      // Check if URL contains query/hash params for auto-sync on other phones
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+        const queryUrl = urlParams.get('supaUrl') || hashParams.get('supaUrl');
+        const queryKey = urlParams.get('supaKey') || hashParams.get('supaKey');
+        if (queryUrl && queryKey) {
+          reinitSupabase(queryUrl, queryKey);
+          localStorage.setItem('CUSTOM_SUPABASE_URL', queryUrl);
+          localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', queryKey);
+          setIsSupabaseActive(true);
+        }
+      }
 
       // Check if custom Supabase credentials are saved locally
       const storedUrl = localStorage.getItem('CUSTOM_SUPABASE_URL');
@@ -135,6 +203,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               }
             } catch (e) {}
           }
+          if (settings.site_content_data) {
+            try {
+              const parsed = typeof settings.site_content_data === 'string'
+                ? JSON.parse(settings.site_content_data)
+                : settings.site_content_data;
+              if (parsed && typeof parsed === 'object') {
+                const merged = { ...DEFAULT_SITE_CONTENT, ...parsed };
+                setSiteContent(merged);
+                localStorage.setItem('site_content_data', JSON.stringify(merged));
+              }
+            } catch (e) {}
+          }
         }
       } catch (err) {
         // Static host - safe to ignore
@@ -160,6 +240,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   if (Array.isArray(parsed)) {
                     setGalleryImages(parsed);
                     localStorage.setItem('site_gallery_images', row.value);
+                  }
+                } catch (e) {}
+              }
+              if (row.key === 'site_content_data' && row.value) {
+                try {
+                  const parsed = JSON.parse(row.value);
+                  if (parsed && typeof parsed === 'object') {
+                    const merged = { ...DEFAULT_SITE_CONTENT, ...parsed };
+                    setSiteContent(merged);
+                    localStorage.setItem('site_content_data', JSON.stringify(merged));
                   }
                 } catch (e) {}
               }
@@ -361,6 +451,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { success: true };
   };
 
+  // Update Site Content & Text
+  const updateSiteContent = async (newContent: Partial<SiteContent>) => {
+    const updated = { ...siteContent, ...newContent };
+    setSiteContent(updated);
+    const jsonStr = JSON.stringify(updated);
+    localStorage.setItem('site_content_data', jsonStr);
+    await saveSetting('site_content_data', jsonStr);
+    return { success: true };
+  };
+
   // Save custom Supabase credentials cleanly
   const saveCustomSupabaseConfig = async (rawUrl: string, rawKey: string) => {
     let cleanUrl = (rawUrl || '').trim();
@@ -370,7 +470,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       throw new Error('Please enter both Project URL and Anon API Key.');
     }
 
-    // Check if the user pasted an API key into the URL field!
     if (cleanUrl.startsWith('sb_publishable_') || cleanUrl.startsWith('eyJ') || cleanUrl.includes('publishable')) {
       throw new Error('You pasted an API Key into the Project URL field! The Project URL should look like https://your-project.supabase.co');
     }
@@ -405,14 +504,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setHeroImage(DEFAULT_HERO_IMAGE);
     setAboutImage(DEFAULT_ABOUT_IMAGE);
     setGalleryImages(DEFAULT_GALLERY);
+    setSiteContent(DEFAULT_SITE_CONTENT);
     localStorage.removeItem('site_hero_image');
     localStorage.removeItem('site_about_image');
     localStorage.removeItem('site_gallery_images');
+    localStorage.removeItem('site_content_data');
     localStorage.removeItem('CUSTOM_SUPABASE_URL');
     localStorage.removeItem('CUSTOM_SUPABASE_ANON_KEY');
     saveSetting('hero_image', DEFAULT_HERO_IMAGE);
     saveSetting('about_image', DEFAULT_ABOUT_IMAGE);
     saveSetting('gallery_images', JSON.stringify(DEFAULT_GALLERY));
+    saveSetting('site_content_data', JSON.stringify(DEFAULT_SITE_CONTENT));
   };
 
   return (
@@ -421,6 +523,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         heroImage,
         aboutImage,
         galleryImages,
+        siteContent,
         isLoading,
         isSupabaseActive,
         updateHeroImage,
@@ -428,6 +531,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addGalleryImage,
         deleteGalleryImage,
         reorderGalleryImages,
+        updateSiteContent,
         saveCustomSupabaseConfig,
         resetImagesToDefault,
       }}

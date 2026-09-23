@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
+import { useAdmin } from '../context/AdminContext';
 
 interface LocationContactProps {
   language: Language;
@@ -23,6 +24,7 @@ export const LocationContact: React.FC<LocationContactProps> = ({
   language,
   onOpenTourModal,
 }) => {
+  const { siteContent } = useAdmin();
   const [isOpenNow, setIsOpenNow] = useState<boolean>(false);
 
   useEffect(() => {
@@ -157,7 +159,7 @@ export const LocationContact: React.FC<LocationContactProps> = ({
                     {language === 'en' ? 'Direct Contact' : 'Contacto Directo'}
                   </h3>
                   <div className="text-xs text-[#1A237E]/70 mt-0.5">
-                    {language === 'en' ? 'Amelia M Vargas · Director' : 'Amelia M Vargas · Directora'}
+                    {siteContent.director} · {language === 'en' ? 'Director' : 'Directora'}
                   </div>
                 </div>
 
@@ -191,7 +193,7 @@ export const LocationContact: React.FC<LocationContactProps> = ({
                 
                 {/* Phone */}
                 <a
-                  href={`tel:${DAYCARE_INFO.phoneRaw}`}
+                  href={`tel:${siteContent.phone.replace(/[^0-9]/g, '')}`}
                   className="p-3.5 rounded-2xl bg-[#FFF8E7] hover:bg-[#FFD60A]/30 transition-colors flex items-center gap-3.5 group border border-[#1A237E]/5"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white text-[#FF6B6B] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
@@ -202,7 +204,7 @@ export const LocationContact: React.FC<LocationContactProps> = ({
                       {language === 'en' ? 'Call or Text Directly' : 'Llamada o Mensaje de Texto'}
                     </div>
                     <div className="text-base font-bold text-[#1A237E] tabular-nums">
-                      {DAYCARE_INFO.phone}
+                      {siteContent.phone}
                     </div>
                   </div>
                 </a>
