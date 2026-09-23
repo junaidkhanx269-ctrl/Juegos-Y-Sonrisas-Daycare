@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import defaultConfig from '../data/supabaseConfig.json';
 
 export const DEFAULT_URL = 'https://zicyrtlnulgnsqycgzpl.supabase.co';
 export const DEFAULT_KEY = 'placeholder-key';
@@ -29,7 +30,10 @@ const getInitialUrl = () => {
     const customUrl = localStorage.getItem('CUSTOM_SUPABASE_URL');
     if (customUrl) return sanitizeUrl(customUrl);
   }
-  return sanitizeUrl(import.meta.env.VITE_SUPABASE_URL);
+  const envUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (envUrl && envUrl !== 'https://YOUR_PROJECT.supabase.co') return sanitizeUrl(envUrl);
+  if (defaultConfig?.url) return sanitizeUrl(defaultConfig.url);
+  return DEFAULT_URL;
 };
 
 const getInitialKey = () => {
@@ -39,6 +43,9 @@ const getInitialKey = () => {
   }
   const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   if (envKey && envKey !== 'YOUR_ANON_KEY') return envKey;
+  if (defaultConfig?.key && defaultConfig.key !== 'YOUR_ANON_KEY' && defaultConfig.key !== 'placeholder-key') {
+    return defaultConfig.key;
+  }
   return DEFAULT_KEY;
 };
 

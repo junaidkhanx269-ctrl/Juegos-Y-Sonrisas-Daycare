@@ -68,34 +68,39 @@ interface AdminContextType {
   resetImagesToDefault: () => void;
 }
 
+const fixImageUrl = (url?: string): string => {
+  if (!url) return '';
+  return url.replace('/src/assets/images/', '/images/');
+};
+
 const DEFAULT_HERO_IMAGE = '/images/amelia-hero.jpg';
 const DEFAULT_ABOUT_IMAGE = '/images/amelia-hero.jpg';
 
 const DEFAULT_GALLERY: GalleryImageItem[] = [
   {
     id: 'default-1',
-    url: '/src/assets/images/hero_montessori_classroom_1790135121726.jpg',
+    url: '/images/hero_montessori_classroom_1790135121726.jpg',
     title: 'Montessori Sunlit Classroom',
     uploadedAt: new Date().toISOString(),
     category: 'classroom',
   },
   {
     id: 'default-2',
-    url: '/src/assets/images/daycare_backyard_play_1790135141749.jpg',
+    url: '/images/daycare_backyard_play_1790135141749.jpg',
     title: 'Enclosed Safe Backyard',
     uploadedAt: new Date().toISOString(),
     category: 'backyard',
   },
   {
     id: 'default-3',
-    url: '/src/assets/images/kids_art_sensory_station_1790135171821.jpg',
+    url: '/images/kids_art_sensory_station_1790135171821.jpg',
     title: 'Sensory Atelier',
     uploadedAt: new Date().toISOString(),
     category: 'art',
   },
   {
     id: 'default-4',
-    url: '/src/assets/images/reading_nook_cozy_1790135186078.jpg',
+    url: '/images/reading_nook_cozy_1790135186078.jpg',
     title: 'Cozy Story Nook',
     uploadedAt: new Date().toISOString(),
     category: 'reading',
@@ -106,18 +111,21 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [heroImage, setHeroImage] = useState<string>(() => {
-    return localStorage.getItem('site_hero_image') || DEFAULT_HERO_IMAGE;
+    return fixImageUrl(localStorage.getItem('site_hero_image') || DEFAULT_HERO_IMAGE);
   });
 
   const [aboutImage, setAboutImage] = useState<string>(() => {
-    return localStorage.getItem('site_about_image') || DEFAULT_ABOUT_IMAGE;
+    return fixImageUrl(localStorage.getItem('site_about_image') || DEFAULT_ABOUT_IMAGE);
   });
 
   const [galleryImages, setGalleryImages] = useState<GalleryImageItem[]>(() => {
     const saved = localStorage.getItem('site_gallery_images');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((img: GalleryImageItem) => ({ ...img, url: fixImageUrl(img.url) }));
+        }
       } catch (e) {}
     }
     return DEFAULT_GALLERY;
@@ -497,6 +505,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
     } catch (err) {
       // Static host - safe to ignore
+    }
+
+    // 4. Instantly push all active images and site content to Supabase site_settings
+    try {
+      if (heroImage) await saveSetting('hero_image', heroImage);
+      if (aboutImage) await saveSetting('about_image', aboutImage);
+      if (galleryImages.length > 0) await saveSetting('gallery_images', JSON.stringify(galleryImages));
+      if (siteContent) await saveSetting('site_content_data', JSON.stringify(siteContent));
+    } catch (err) {
+      console.warn('Initial push to Supabase site_settings notice:', err);
     }
   };
 

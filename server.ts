@@ -25,28 +25,28 @@ const DEFAULT_SETTINGS = {
   gallery_images: JSON.stringify([
     {
       id: 'default-1',
-      url: '/src/assets/images/hero_montessori_classroom_1790135121726.jpg',
+      url: '/images/hero_montessori_classroom_1790135121726.jpg',
       title: 'Montessori Sunlit Classroom',
       uploadedAt: new Date().toISOString(),
       category: 'classroom',
     },
     {
       id: 'default-2',
-      url: '/src/assets/images/daycare_backyard_play_1790135141749.jpg',
+      url: '/images/daycare_backyard_play_1790135141749.jpg',
       title: 'Enclosed Safe Backyard',
       uploadedAt: new Date().toISOString(),
       category: 'backyard',
     },
     {
       id: 'default-3',
-      url: '/src/assets/images/kids_art_sensory_station_1790135171821.jpg',
+      url: '/images/kids_art_sensory_station_1790135171821.jpg',
       title: 'Sensory Atelier',
       uploadedAt: new Date().toISOString(),
       category: 'art',
     },
     {
       id: 'default-4',
-      url: '/src/assets/images/reading_nook_cozy_1790135186078.jpg',
+      url: '/images/reading_nook_cozy_1790135186078.jpg',
       title: 'Cozy Story Nook',
       uploadedAt: new Date().toISOString(),
       category: 'reading',

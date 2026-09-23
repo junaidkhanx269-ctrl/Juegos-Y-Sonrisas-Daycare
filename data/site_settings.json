@@ -1,0 +1,5 @@
+{
+  "hero_image": "/images/amelia-hero.jpg",
+  "about_image": "/images/amelia-hero.jpg",
+  "gallery_images": "[{\"id\":\"default-1\",\"url\":\"/images/hero_montessori_classroom_1790135121726.jpg\",\"title\":\"Montessori Sunlit Classroom\",\"uploadedAt\":\"2026-09-23T23:01:22.211Z\",\"category\":\"classroom\"},{\"id\":\"default-2\",\"url\":\"/images/daycare_backyard_play_1790135141749.jpg\",\"title\":\"Enclosed Safe Backyard\",\"uploadedAt\":\"2026-09-23T23:01:22.211Z\",\"category\":\"backyard\"},{\"id\":\"default-3\",\"url\":\"/images/kids_art_sensory_station_1790135171821.jpg\",\"title\":\"Sensory Atelier\",\"uploadedAt\":\"2026-09-23T23:01:22.211Z\",\"category\":\"art\"},{\"id\":\"default-4\",\"url\":\"/images/reading_nook_cozy_1790135186078.jpg\",\"title\":\"Cozy Story Nook\",\"uploadedAt\":\"2026-09-23T23:01:22.211Z\",\"category\":\"reading\"}]"
+}
