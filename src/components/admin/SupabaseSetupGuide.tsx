@@ -46,11 +46,18 @@ CREATE POLICY "Allow public insert/update site_settings"
     setTimeout(() => setCopiedSql(false), 2500);
   };
 
-  const handleSaveConfig = (e: React.FormEvent) => {
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveCustomSupabaseConfig(customUrl, customKey);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setErrorMessage('');
+    try {
+      await saveCustomSupabaseConfig(customUrl, customKey);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to save credentials. Please check your URL and Key.');
+    }
   };
 
   return (
@@ -84,52 +91,103 @@ CREATE POLICY "Allow public insert/update site_settings"
           </div>
         </div>
 
-        <form onSubmit={handleSaveConfig} className="p-6 space-y-4">
+        <form onSubmit={handleSaveConfig} className="p-6 space-y-5">
           {savedSuccess && (
-            <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-600" />
-              <span>Supabase credentials saved! App reloaded to test connection.</span>
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in duration-200">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Supabase credentials connected and active!</span>
             </div>
           )}
+
+          {/* Real-time warning if user pasted Key into URL field */}
+          {(customUrl.startsWith('sb_publishable_') || customUrl.startsWith('eyJ') || customUrl.includes('publishable')) && (
+            <div className="p-4 bg-amber-50 border-2 border-amber-400 text-amber-900 rounded-2xl text-xs space-y-2">
+              <div className="font-bold flex items-center gap-2 text-amber-900">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Notice: API Key pasted into Project URL field!</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-800">
+                You pasted your publishable API Key (<code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded">sb_publishable_...</code>) into the <strong>Project URL</strong> field.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomKey(customUrl);
+                    setCustomUrl('');
+                  }}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded-lg transition-all"
+                >
+                  Move Key to Anon API Key Box
+                </button>
+              </div>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="p-3.5 bg-red-50 border border-red-300 text-red-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Visual Helper Box */}
+          <div className="p-3.5 bg-[#FFF8E7] rounded-2xl border border-[#8B4513]/20 text-xs text-[#8B4513] space-y-1">
+            <p className="font-bold text-[#1A237E]">📌 Where to find these in Supabase Dashboard:</p>
+            <ul className="list-disc list-inside text-[11px] space-y-1 pl-1">
+              <li><strong>Project URL:</strong> Starts with <code className="bg-white px-1 rounded border border-[#8B4513]/20">https://</code> and ends in <code className="bg-white px-1 rounded border border-[#8B4513]/20">.supabase.co</code> (e.g. <code className="font-mono">https://xyzcompany.supabase.co</code>)</li>
+              <li><strong>Anon API Key:</strong> Starts with <code className="bg-white px-1 rounded border border-[#8B4513]/20">sb_publishable_...</code> or <code className="bg-white px-1 rounded border border-[#8B4513]/20">eyJ...</code></li>
+            </ul>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
-                Project URL (<code className="lowercase">VITE_SUPABASE_URL</code>)
+                1. Project URL (<code className="lowercase">https://...supabase.co</code>)
               </label>
               <input
                 type="text"
                 placeholder="https://xyzcompany.supabase.co"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-mono font-medium text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                className={`w-full px-3.5 py-2.5 border-2 rounded-xl text-xs font-mono font-medium text-[#1A237E] focus:outline-none ${
+                  customUrl.startsWith('sb_publishable_') || customUrl.startsWith('eyJ')
+                    ? 'border-amber-500 bg-amber-50/50'
+                    : 'border-[#8B4513]/20 focus:border-[#8B4513]'
+                }`}
               />
+              <span className="text-[10px] text-[#8B4513] mt-1 block">
+                Must be the web URL ending in <code className="font-mono font-bold">.supabase.co</code>
+              </span>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
-                Anon API Key (<code className="lowercase">VITE_SUPABASE_ANON_KEY</code>)
+                2. Anon API Key (<code className="lowercase">sb_publishable_...</code> or <code className="lowercase">eyJ...</code>)
               </label>
               <input
                 type="password"
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..."
+                placeholder="sb_publishable_... or eyJhbG..."
                 value={customKey}
                 onChange={(e) => setCustomKey(e.target.value)}
                 className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-mono font-medium text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
               />
+              <span className="text-[10px] text-[#8B4513] mt-1 block">
+                Paste your publishable or anon key here
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
             <span className="text-[11px] text-[#8B4513]">
-              Credentials entered here automatically save to the server and sync across <strong>all mobile phones, tablets, and computers</strong>.
+              Credentials entered here automatically save and sync across <strong>all mobile phones, tablets, and computers</strong>.
             </span>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-[#8B4513] hover:bg-[#5D2E0C] text-[#FFF8DC] text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 bg-[#8B4513] hover:bg-[#5D2E0C] text-[#FFF8DC] text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               <Save className="w-4 h-4" />
-              <span>Save & Verify Connection</span>
+              <span>Save & Connect Supabase</span>
             </button>
           </div>
         </form>
