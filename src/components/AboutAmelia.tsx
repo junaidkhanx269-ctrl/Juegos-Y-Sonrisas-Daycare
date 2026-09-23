@@ -2,13 +2,14 @@ import React from 'react';
 import { Award, GraduationCap, Heart, Sparkles, BookOpen, ShieldCheck, Check } from 'lucide-react';
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
-import ameliaPortrait from '../assets/images/amelia_educator_portrait_1790135158738.jpg';
+import { useAdmin } from '../context/AdminContext';
 
 interface AboutAmeliaProps {
   language: Language;
 }
 
 export const AboutAmelia: React.FC<AboutAmeliaProps> = ({ language }) => {
+  const { aboutImage } = useAdmin();
   const credentials = [
     {
       icon: ShieldCheck,
@@ -78,8 +79,8 @@ export const AboutAmelia: React.FC<AboutAmeliaProps> = ({ language }) => {
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'A loving Boston educator dedicated to nurturing infants, toddlers, and preschoolers in a warm, family-centered environment at 136 Mount Hope Street.'
-              : 'Una educadora apasionada de Boston dedicada a brindar amor, seguridad y estimulación a bebés y niños en un ambiente familiar en 136 Mount Hope Street.'}
+              ? 'A loving Boston educator dedicated to nurturing infants, toddlers, and preschoolers in a warm, family-centered environment at 48 Hazelton St.'
+              : 'Una educadora apasionada de Boston dedicada a brindar amor, seguridad y estimulación a bebés y niños en un ambiente familiar en 48 Hazelton St.'}
           </p>
         </div>
 
@@ -109,9 +110,9 @@ export const AboutAmelia: React.FC<AboutAmeliaProps> = ({ language }) => {
               {/* Outer decorative card */}
               <div className="polaroid-frame bg-white shadow-xl rotate-1 hover:rotate-0 transition-transform duration-300">
                 <img
-                  src={ameliaPortrait}
-                  alt="Amelia M Vargas - Licensed Childcare Director in Roslindale, Boston"
-                  className="w-full h-80 sm:h-96 object-cover rounded-lg"
+                  src={aboutImage}
+                  alt="Amelia M Vargas - Licensed Childcare Director in Mattapan, Boston"
+                  className="w-full h-80 sm:h-96 object-cover object-top rounded-lg"
                   loading="lazy"
                 />
                 <div className="pt-4 text-center">
@@ -146,8 +147,8 @@ export const AboutAmelia: React.FC<AboutAmeliaProps> = ({ language }) => {
             <div className="space-y-4 text-base text-[#1A237E]/85 leading-relaxed">
               <p>
                 {language === 'en'
-                  ? 'Welcome to Juegos Y Sonrisas! I founded this daycare with a clear conviction: children learn best when they feel deeply secure, emotionally seen, and inspired by joyful curiosity. My home preschool at 136 Mount Hope Street was thoughtfully planned from the ground up to offer the intimacy and warmth of a family home paired with the educational rigor of a top-tier Montessori classroom.'
-                  : '¡Bienvenidos a Juegos Y Sonrisas! Fundé este hogar educativo con una convicción clara: los niños aprenden mejor cuando se sienten seguros, amados y motivados por una curiosidad alegre. Nuestro centro en 136 Mount Hope Street combina la calidez y el cariño de un hogar familiar con la estructura y excelencia de un preescolar Montessori de primer nivel.'}
+                  ? 'Welcome to Juegos Y Sonrisas! I founded this daycare with a clear conviction: children learn best when they feel deeply secure, emotionally seen, and inspired by joyful curiosity. My home preschool at 48 Hazelton St was thoughtfully planned from the ground up to offer the intimacy and warmth of a family home paired with the educational rigor of a top-tier Montessori classroom.'
+                  : '¡Bienvenidos a Juegos Y Sonrisas! Fundé este hogar educativo con una convicción clara: los niños aprenden mejor cuando se sienten seguros, amados y motivados por una curiosidad alegre. Nuestro centro en 48 Hazelton St combina la calidez y el cariño de un hogar familiar con la estructura y excelencia de un preescolar Montessori de primer nivel.'}
               </p>
               <p>
                 {language === 'en'

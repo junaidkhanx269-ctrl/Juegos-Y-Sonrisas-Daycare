@@ -46,8 +46,8 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
 
             <p className="text-xs sm:text-sm text-white/75 leading-relaxed">
               {language === 'en'
-                ? 'Where Learning is Full of Games & Smiles. Licensed home preschool & infant sanctuary in Roslindale, Boston MA. Guided with love by licensed educator Amelia M Vargas.'
-                : 'Donde Aprender es Juego y Sonrisas. Preescolar y santuario infantil con licencia en Roslindale, Boston MA. Guiado con cariño y vocación por la educadora Amelia M Vargas.'}
+                ? 'Where Learning is Full of Games & Smiles. Licensed home preschool & infant sanctuary in Mattapan, Boston MA. Guided with love by licensed educator Amelia M Vargas.'
+                : 'Donde Aprender es Juego y Sonrisas. Preescolar y santuario infantil con licencia en Mattapan, Boston MA. Guiado con cariño y vocación por la educadora Amelia M Vargas.'}
             </p>
 
             <div className="pt-2 text-xs text-white/60 space-y-1 font-mono">
@@ -197,7 +197,20 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
           <div className="flex items-center gap-4">
             <span>{DAYCARE_INFO.licenseState} #{DAYCARE_INFO.licenseNumber}</span>
             <span>·</span>
-            <span>Roslindale, MA 02131</span>
+            <span>48 Hazelton St, Mattapan, MA 02126</span>
+            <span>·</span>
+            <a
+              href="/admin/login"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/admin/login');
+                window.dispatchEvent(new Event('popstate'));
+              }}
+              className="text-[#FFD60A] hover:underline font-bold inline-flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin Panel</span>
+            </a>
           </div>
         </div>
 

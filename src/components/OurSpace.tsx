@@ -48,10 +48,10 @@ export const OurSpace: React.FC<OurSpaceProps> = ({ language }) => {
     },
     {
       icon: MapPin,
-      titleEn: 'Quiet Roslindale Residential Setting',
+      titleEn: 'Quiet Mattapan Residential Setting',
       titleEs: 'Tranquilo Entorno Residencial',
-      descEn: 'Located at 136 Mount Hope St. Steps from Healey Field, Charles Sumner Elementary, and quiet neighborhood streets.',
-      descEs: 'Situado en 136 Mount Hope St. A pasos del parque Healey Field y la escuela Charles Sumner en un vecindario pacífico.',
+      descEn: 'Located at 48 Hazelton St. Quiet neighborhood streets with private driveway parking.',
+      descEs: 'Situado en 48 Hazelton St. En un vecindario pacífico con estacionamiento privado.',
     },
   ];
 
@@ -65,7 +65,7 @@ export const OurSpace: React.FC<OurSpaceProps> = ({ language }) => {
             {language === 'en' ? 'Environment As The Third Teacher' : 'El Entorno como Tercer Maestro'}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#1A237E] mt-2 mb-4">
-            {language === 'en' ? 'Our Loving Space at 136 Mount Hope' : 'Nuestro Espacio en 136 Mount Hope'}
+            {language === 'en' ? 'Our Loving Space at 48 Hazelton St' : 'Nuestro Espacio en 48 Hazelton St'}
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
@@ -178,7 +178,7 @@ export const OurSpace: React.FC<OurSpaceProps> = ({ language }) => {
                 {language === 'en' ? '📍 Click pulse points to discover features' : '📍 Toque los puntos interactivos'}
               </span>
               <span className="bg-[#2D6A4F] px-3 py-1 rounded-full font-bold">
-                {language === 'en' ? '136 Mount Hope St' : 'Roslindale, MA'}
+                {language === 'en' ? '48 Hazelton St' : 'Mattapan, MA'}
               </span>
             </div>
 

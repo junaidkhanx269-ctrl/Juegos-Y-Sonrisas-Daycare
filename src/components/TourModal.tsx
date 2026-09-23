@@ -103,7 +103,7 @@ export const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, language 
             <div className="p-4 bg-[#FFF8E7] rounded-2xl text-xs text-[#1A237E]/85 space-y-2 text-left">
               <div className="flex items-center gap-2 font-bold text-[#1A237E]">
                 <MapPin className="w-4 h-4 text-[#FF6B6B]" />
-                <span>136 Mount Hope St, Roslindale, MA 02131</span>
+                <span>48 Hazelton St, Mattapan, MA 02126</span>
               </div>
               <p className="text-[11px] text-[#1A237E]/70 pl-6">
                 {language === 'en'
@@ -142,8 +142,8 @@ export const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, language 
               </h3>
               <p className="text-xs text-[#1A237E]/70 mt-1">
                 {language === 'en'
-                  ? 'Experience our Montessori spaces and meet Amelia in person at 136 Mount Hope St.'
-                  : 'Conozca nuestras instalaciones Montessori y converse con Amelia en 136 Mount Hope St.'}
+                  ? 'Experience our Montessori spaces and meet Amelia in person at 48 Hazelton St.'
+                  : 'Conozca nuestras instalaciones Montessori y converse con Amelia en 48 Hazelton St.'}
               </p>
             </div>
 

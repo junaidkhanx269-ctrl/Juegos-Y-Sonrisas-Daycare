@@ -32,8 +32,8 @@ export const ParentVoices: React.FC<ParentVoicesProps> = ({ language }) => {
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'Real words from parents in Roslindale, West Roxbury, and Jamaica Plain whose little ones grew up at Juegos Y Sonrisas.'
-              : 'Testimonios reales de padres de Roslindale, West Roxbury y Jamaica Plain cuyos pequeños crecieron en Juegos Y Sonrisas.'}
+              ? 'Real words from parents in Mattapan, Dorchester, and Boston whose little ones grew up at Juegos Y Sonrisas.'
+              : 'Testimonios reales de padres de Mattapan, Dorchester y Boston cuyos pequeños crecieron en Juegos Y Sonrisas.'}
           </p>
         </div>
 

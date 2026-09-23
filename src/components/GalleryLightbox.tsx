@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { X, ZoomIn, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { Language } from '../types';
+import { useAdmin } from '../context/AdminContext';
 
 import heroClassroom from '../assets/images/hero_montessori_classroom_1790135121726.jpg';
 import backyardPlay from '../assets/images/daycare_backyard_play_1790135141749.jpg';
 import readingNook from '../assets/images/reading_nook_cozy_1790135186078.jpg';
 import kidsArt from '../assets/images/kids_art_sensory_station_1790135171821.jpg';
-import ameliaPortrait from '../assets/images/amelia_educator_portrait_1790135158738.jpg';
 
 interface GalleryLightboxProps {
   language: Language;
@@ -14,7 +14,7 @@ interface GalleryLightboxProps {
 
 interface GalleryItem {
   id: string;
-  category: 'classroom' | 'backyard' | 'art' | 'reading';
+  category: 'classroom' | 'backyard' | 'art' | 'reading' | 'all';
   src: string;
   titleEn: string;
   titleEs: string;
@@ -25,10 +25,12 @@ interface GalleryItem {
 }
 
 export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ language }) => {
+  const { galleryImages, aboutImage } = useAdmin();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [selectedImageIdx, setSelectedImageIdx] = useState<number | null>(null);
 
-  const galleryItems: GalleryItem[] = [
+  // Map custom images from Admin Panel or default fallback gallery
+  const defaultItems: GalleryItem[] = [
     {
       id: '1',
       category: 'classroom',
@@ -76,15 +78,30 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ language }) =>
     {
       id: '5',
       category: 'classroom',
-      src: ameliaPortrait,
+      src: aboutImage,
       titleEn: 'Loving, Certified Guidance with Amelia',
       titleEs: 'Acompañamiento Amoroso y Certificado con Amelia',
       descEn: 'Over a decade of early education experience, pediatric CPR certified, providing maternal warmth daily.',
-      descEs: 'Más de una década de experiencia en educación temprana y calidez maternal diaria en Roslindale.',
+      descEs: 'Más de una década de experiencia en educación temprana y calidez maternal diaria en Mattapan.',
       tagEn: 'Educator',
       tagEs: 'Educadora',
     },
   ];
+
+  // If user uploaded photos in Admin Context, prepend them
+  const customItems: GalleryItem[] = galleryImages.map((img, idx) => ({
+    id: img.id,
+    category: (img.category as any) || 'classroom',
+    src: img.url,
+    titleEn: img.title || `Daycare Photo #${idx + 1}`,
+    titleEs: img.title || `Foto de Guardería #${idx + 1}`,
+    descEn: 'High-quality permanent photo stored in Supabase site-images storage.',
+    descEs: 'Fotografía almacenada permanentemente en Supabase.',
+    tagEn: 'Photo',
+    tagEs: 'Fotografía',
+  }));
+
+  const galleryItems = customItems.length > 0 ? customItems : defaultItems;
 
   const filteredItems =
     activeFilter === 'all'
@@ -125,8 +142,8 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ language }) =>
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'Explore our sunlit indoor classrooms, cozy reading nooks, and private green yard at 136 Mount Hope St, Roslindale.'
-              : 'Explore nuestras aulas luminosas, acogedores rincones de lectura y amplio jardín en 136 Mount Hope St, Roslindale.'}
+              ? 'Explore our sunlit indoor classrooms, cozy reading nooks, and private green yard at 48 Hazelton St, Mattapan.'
+              : 'Explore nuestras aulas luminosas, acogedores rincones de lectura y amplio jardín en 48 Hazelton St, Mattapan.'}
           </p>
         </div>
 

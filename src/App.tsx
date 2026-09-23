@@ -1,10 +1,10 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Juegos Y Sonrisas Daycare - Roslindale, MA
+ * Juegos Y Sonrisas Daycare - Mattapan, MA
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Language } from './types';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -20,13 +20,45 @@ import { FAQAccordion } from './components/FAQAccordion';
 import { LocationContact } from './components/LocationContact';
 import { Footer } from './components/Footer';
 import { TourModal } from './components/TourModal';
-import { Phone, MessageCircle, Calendar } from 'lucide-react';
+import { Phone, MessageCircle } from 'lucide-react';
 import { DAYCARE_INFO } from './data/translations';
 
-export default function App() {
+import { AdminProvider } from './context/AdminContext';
+import { AdminLogin } from './pages/AdminLogin';
+import { AdminDashboard } from './pages/AdminDashboard';
+
+function MainAppContent() {
   const [language, setLanguage] = useState<Language>('en');
   const [isTourModalOpen, setIsTourModalOpen] = useState<boolean>(false);
   const [preselectedProgramId, setPreselectedProgramId] = useState<string>('preschool-ready');
+
+  // Simple client-side URL route state
+  const [currentRoute, setCurrentRoute] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin/login')) return '/admin/login';
+      if (path.startsWith('/admin')) return '/admin';
+      if (window.location.hash === '#admin') return '/admin';
+    }
+    return '/';
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin/login')) setCurrentRoute('/admin/login');
+      else if (path.startsWith('/admin') || window.location.hash === '#admin') setCurrentRoute('/admin');
+      else setCurrentRoute('/');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (route: string) => {
+    setCurrentRoute(route);
+    window.history.pushState({}, '', route);
+  };
 
   const handleSelectProgramForEnrollment = (programId: string) => {
     setPreselectedProgramId(programId);
@@ -36,9 +68,41 @@ export default function App() {
     }
   };
 
+  // Route 1: Admin Login
+  if (currentRoute === '/admin/login') {
+    return (
+      <AdminLogin
+        onLoginSuccess={() => navigateTo('/admin')}
+        onNavigateHome={() => navigateTo('/')}
+      />
+    );
+  }
+
+  // Route 2: Admin Dashboard
+  if (currentRoute === '/admin') {
+    const isAdmin = typeof localStorage !== 'undefined' && localStorage.getItem('isAdmin') === 'true';
+    if (!isAdmin) {
+      return (
+        <AdminLogin
+          onLoginSuccess={() => navigateTo('/admin')}
+          onNavigateHome={() => navigateTo('/')}
+        />
+      );
+    }
+    return (
+      <AdminDashboard
+        onLogout={() => {
+          localStorage.removeItem('isAdmin');
+          navigateTo('/admin/login');
+        }}
+        onNavigateHome={() => navigateTo('/')}
+      />
+    );
+  }
+
+  // Route 3: Public Daycare Website
   return (
     <div className="min-h-screen flex flex-col bg-[#FFF8E7] text-[#1A237E] font-sans antialiased selection:bg-[#FFD60A] selection:text-[#1A237E]">
-      
       {/* Top Bar / Navigation */}
       <Header
         language={language}
@@ -127,7 +191,14 @@ export default function App() {
           <span className="tabular-nums">{DAYCARE_INFO.phone}</span>
         </a>
       </div>
-
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AdminProvider>
+      <MainAppContent />
+    </AdminProvider>
   );
 }

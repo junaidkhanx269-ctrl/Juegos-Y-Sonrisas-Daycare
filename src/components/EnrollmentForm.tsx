@@ -141,8 +141,8 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'Request detailed enrollment information, tuition assistance options, or schedule your family’s private tour of 136 Mount Hope St.'
-              : 'Solicite información detallada de inscripción, opciones de subsidio o agende una visita privada para conocer nuestro espacio.'}
+              ? 'Request detailed enrollment information, tuition assistance options, or schedule your family’s private tour of 48 Hazelton St.'
+              : 'Solicite información detallada de inscripción, opciones de subsidio o agende una visita privada para conocer nuestro espacio en 48 Hazelton St.'}
           </p>
         </div>
 

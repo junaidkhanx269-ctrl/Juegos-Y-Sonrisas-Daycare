@@ -3,8 +3,8 @@ import { ShieldCheck, HeartPulse, CheckCircle2, Phone, Calendar, MapPin, Sparkle
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
 import { SunshineDoodle, HandDrawnArrow, WavyUnderline, StarSparkle } from './Doodles';
+import { useAdmin } from '../context/AdminContext';
 
-import heroClassroom from '../assets/images/hero_montessori_classroom_1790135121726.jpg';
 import backyardPlay from '../assets/images/daycare_backyard_play_1790135141749.jpg';
 import readingNook from '../assets/images/reading_nook_cozy_1790135186078.jpg';
 import kidsArt from '../assets/images/kids_art_sensory_station_1790135171821.jpg';
@@ -15,6 +15,7 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
+  const { heroImage } = useAdmin();
   return (
     <section className="relative overflow-hidden pt-6 pb-16 md:pt-12 md:pb-24 bg-grain">
       {/* Background soft ambient blobs */}
@@ -30,7 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
             {/* Top eyebrow trust notice */}
             <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1A237E]/90 bg-white/80 border border-[#1A237E]/10 rounded-full px-4 py-1.5 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse" />
-              <span>{language === 'en' ? 'Roslindale, MA · Infant to 5 Years Home Preschool' : 'Roslindale, MA · Preescolar en el Hogar de Lactantes a 5 Años'}</span>
+              <span>{language === 'en' ? 'Mattapan, MA · Infant to 5 Years Home Preschool' : 'Mattapan, MA · Preescolar en el Hogar de Lactantes a 5 Años'}</span>
               <span className="text-[#1A237E]/30">|</span>
               <span className="font-bold text-[#FF6B6B]">{language === 'en' ? 'Enrolling for 2026' : 'Inscripciones Abiertas'}</span>
             </div>
@@ -67,8 +68,8 @@ export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-[#1A237E]/80 max-w-2xl leading-relaxed">
               {language === 'en'
-                ? 'Licensed home preschool in Roslindale for infants to 5 years. Nurturing psychological, emotional, social & cognitive growth through intentional play. Certified in Early Childhood Education, First Aid & CPR.'
-                : 'Preescolar en el hogar con licencia en Roslindale para bebés hasta 5 años. Nutriendo el desarrollo emocional, social y cognitivo a través del juego intencional. Certificada en Educación Temprana, Primeros Auxilios y RCP.'}
+                ? 'Licensed home preschool in Mattapan for infants to 5 years. Nurturing psychological, emotional, social & cognitive growth through intentional play. Certified in Early Childhood Education, First Aid & CPR.'
+                : 'Preescolar en el hogar con licencia en Mattapan para bebés hasta 5 años. Nutriendo el desarrollo emocional, social y cognitivo a través del juego intencional. Certificada en Educación Temprana, Primeros Auxilios y RCP.'}
             </p>
 
             {/* Trust Row: 3 verified badges */}
@@ -127,7 +128,7 @@ export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
             {/* Address kicker */}
             <div className="flex items-center gap-2 text-xs sm:text-sm text-[#1A237E]/70 pt-1">
               <MapPin className="w-4 h-4 text-[#E07A5F] shrink-0" />
-              <span>{DAYCARE_INFO.address} · Roslindale, Boston</span>
+              <span>{DAYCARE_INFO.address} · Mattapan, Boston</span>
             </div>
           </div>
 
@@ -137,21 +138,25 @@ export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
             {/* Hand-drawn arrow note */}
             <div className="absolute -top-10 right-4 sm:right-10 z-20 flex items-center gap-2 pointer-events-none">
               <span className="font-display font-semibold text-xs sm:text-sm text-[#E07A5F] bg-white/90 px-3 py-1 rounded-full shadow-xs border border-[#E07A5F]/20">
-                {language === 'en' ? 'Our little world at 136 Mount Hope St' : 'Nuestro espacio en 136 Mount Hope St'}
+                {language === 'en' ? 'Our little world at 48 Hazelton St' : 'Nuestro espacio en 48 Hazelton St'}
               </span>
               <HandDrawnArrow className="w-12 h-7 text-[#E07A5F]" />
             </div>
 
-            {/* Main Primary Image */}
-            <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform transition-transform hover:scale-[1.01] duration-300">
+            {/* Main Primary Image with Warm Daycare Interior Atmosphere */}
+            <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-b from-[#FFFDF9] via-[#FFF9EE] to-[#FDF4E3] transform transition-transform hover:scale-[1.01] duration-300">
+              {/* Soft warm interior daycare ambiance behind her */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A237E]/20 via-transparent to-amber-50/40 pointer-events-none z-10" />
+              
               <img
-                src={heroClassroom}
-                alt="Montessori classroom and art learning area at Juegos Y Sonrisas Daycare"
-                className="w-full h-80 sm:h-96 object-cover"
+                src={heroImage}
+                alt="Amelia Vargas - Juegos y Sonrisas Daycare"
+                className="object-cover w-full h-[480px] sm:h-[540px] object-top rounded-2xl"
                 loading="eager"
               />
-              <div className="absolute bottom-3 left-3 bg-[#1A237E]/80 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full">
-                {language === 'en' ? '✨ Light-filled Montessori Atelier' : '✨ Atelier Montessori Luminoso'}
+              <div className="absolute bottom-3 left-3 z-20 bg-[#1A237E]/90 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/20 shadow-md flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#FFD60A]" />
+                <span>{language === 'en' ? 'Amelia M Vargas · Licensed Director & Founder' : 'Amelia M Vargas · Directora y Fundadora'}</span>
               </div>
             </div>
 
@@ -159,7 +164,7 @@ export const Hero: React.FC<HeroProps> = ({ language, onOpenTourModal }) => {
             <div className="absolute -bottom-8 -left-6 sm:-left-10 z-20 w-44 sm:w-52 polaroid-frame transform -rotate-4 hover:rotate-0 transition-transform duration-300">
               <img
                 src={backyardPlay}
-                alt="Enclosed green backyard outdoor play space in Roslindale"
+                alt="Enclosed green backyard outdoor play space in Mattapan"
                 className="w-full h-28 sm:h-32 object-cover rounded-md"
                 loading="lazy"
               />

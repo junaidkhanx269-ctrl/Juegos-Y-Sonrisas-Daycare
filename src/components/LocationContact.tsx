@@ -60,15 +60,15 @@ export const LocationContact: React.FC<LocationContactProps> = ({
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <span className="text-xs sm:text-sm font-bold tracking-widest text-[#E07A5F] uppercase font-mono">
-            {language === 'en' ? 'Visit Our Neighborhood' : 'En el Corazón de Roslindale'}
+            {language === 'en' ? 'Visit Our Neighborhood' : 'En el Corazón de Mattapan'}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#1A237E] mt-2 mb-4">
             {language === 'en' ? 'Location & Directions' : 'Ubicación y Contacto'}
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'Conveniently located at 136 Mount Hope Street in quiet residential Roslindale with private driveway parking.'
-              : 'Convenientemente ubicado en 136 Mount Hope Street, en una tranquila calle residencial de Roslindale con estacionamiento privado.'}
+              ? 'Conveniently located at 48 Hazelton St in quiet residential Mattapan, MA 02126 with private driveway parking.'
+              : 'Convenientemente ubicado en 48 Hazelton St, en una tranquila calle residencial de Mattapan, MA 02126 con estacionamiento privado.'}
           </p>
         </div>
 
@@ -82,14 +82,14 @@ export const LocationContact: React.FC<LocationContactProps> = ({
             <div className="relative w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-[#1A237E]/10 bg-slate-100 shadow-inner">
               <iframe
                 title="Juegos Y Sonrisas Daycare Map Location"
-                src="https://maps.google.com/maps?q=136%20Mount%20Hope%20Street,%20Roslindale,%20MA%2002131&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=48%20Hazelton%20St,%20Mattapan,%20MA%2002126&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 className="w-full h-full border-0"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
               <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-xl shadow-xs text-xs font-bold text-[#1A237E] flex items-center gap-1.5 border border-[#1A237E]/10">
                 <MapPin className="w-3.5 h-3.5 text-[#FF6B6B]" />
-                <span>136 Mount Hope St, Roslindale, MA 02131</span>
+                <span>48 Hazelton St, Mattapan, MA 02126</span>
               </div>
             </div>
 

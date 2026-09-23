@@ -4,8 +4,8 @@ export const DAYCARE_INFO = {
   name: 'Juegos Y Sonrisas Daycare',
   taglineEn: 'Where Learning is Full of Games & Smiles',
   taglineEs: 'Donde Aprender es Juego y Sonrisas',
-  address: '136 Mount Hope Street, Roslindale, MA 02131',
-  neighborhood: 'Roslindale, Boston, MA',
+  address: '48 Hazelton St, Mattapan, MA 02126',
+  neighborhood: 'Mattapan, Boston, MA',
   phone: '+1 (857) 361-8923',
   phoneRaw: '8573618923',
   email: 'info@juegosysonrisas.com',
@@ -15,11 +15,11 @@ export const DAYCARE_INFO = {
   hoursEn: 'Monday – Friday: 8:00 AM – 5:00 PM',
   hoursEs: 'Lunes – Viernes: 8:00 AM – 5:00 PM',
   geo: {
-    lat: 42.2835,
-    lng: -71.1275,
+    lat: 42.2798,
+    lng: -71.0927,
   },
   whatsappUrl: 'https://wa.me/18573618923?text=Hello%20Amelia,%20I%20would%20like%20to%20schedule%20a%20tour%20for%20Juegos%20Y%20Sonrisas%20Daycare.',
-  googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=136+Mount+Hope+Street,+Roslindale,+MA+02131',
+  googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=48+Hazelton+St,+Mattapan,+MA+02126',
 };
 
 export const PROGRAMS: ProgramTier[] = [
@@ -97,7 +97,7 @@ export const PROGRAMS: ProgramTier[] = [
       'Outdoor physical games, obstacle courses & gardening',
       'Creative arts, coding puzzles & board game strategy',
       'Healthy afternoon snacks & collaborative group projects',
-      'Convenient proximity to Roslindale elementary schools',
+      'Convenient proximity to Mattapan elementary schools',
     ],
     featuresEs: [
       'Guía estructurada de tareas y lectura bilingüe guiada',
@@ -105,7 +105,7 @@ export const PROGRAMS: ProgramTier[] = [
       'Juegos físicos al aire libre, pistas de obstáculos y huerto',
       'Artes plásticas, juegos de lógica y pensamiento crítico',
       'Meriendas saludables y proyectos grupales colaborativos',
-      'Cercanía estratégica a escuelas primarias de Roslindale',
+      'Cercanía estratégica a escuelas primarias de Mattapan',
     ],
   },
 ];
@@ -242,10 +242,10 @@ export const SPACE_HOTSPOTS: Hotspot[] = [
     id: 'neighborhood',
     x: 82,
     y: 80,
-    title: 'Peaceful Roslindale Neighborhood',
-    titleEs: 'Tranquilo Barrio de Roslindale',
-    description: '136 Mount Hope St is nestled on a quiet residential street, minutes from local parks (Healey Field), Charles Sumner Elementary, and convenient MBTA lines.',
-    descriptionEs: 'Ubicado en una hermosa calle residencial tranquila, a pasos del parque Healey, escuelas primarias y con fácil acceso a Washington St.',
+    title: 'Peaceful Mattapan Neighborhood',
+    titleEs: 'Tranquilo Barrio de Mattapan',
+    description: '48 Hazelton St is nestled on a quiet residential street, minutes from local parks, neighborhood elementary schools, and convenient MBTA lines.',
+    descriptionEs: 'Ubicado en una hermosa calle residencial tranquila en 48 Hazelton St, a pasos de parques locales, escuelas y transporte accesible.',
     tag: 'Community',
     tagEs: 'Comunidad',
   },
