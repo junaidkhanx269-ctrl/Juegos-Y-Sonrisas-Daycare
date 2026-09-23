@@ -1,0 +1,8 @@
+{
+  "name": "Juegos Y Sonrisas Daycare",
+  "description": "Licensed home preschool & daycare in Roslindale, MA 02131. Nurturing growth through intentional play, Montessori learning, bilingual care, and licensed educator Amelia M Vargas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

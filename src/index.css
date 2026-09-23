@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fredoka", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-cream: #FFF8E7;
+  --color-sunshine: #FFD60A;
+  --color-coral: #FF6B6B;
+  --color-sage: #A8E6CF;
+  --color-sage-dark: #2D6A4F;
+  --color-navy: #1A237E;
+  --color-clay: #E07A5F;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-body);
+  background-color: #FFF8E7;
+  color: #1A237E;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+}
+
+/* Subtle organic grain overlay */
+.bg-grain {
+  background-image: radial-gradient(rgba(26, 35, 126, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Custom soft shadow */
+.shadow-soft {
+  box-shadow: 0 10px 30px -5px rgba(26, 35, 126, 0.07), 0 4px 6px -2px rgba(26, 35, 126, 0.03);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 20px 40px -10px rgba(26, 35, 126, 0.12), 0 8px 16px -4px rgba(26, 35, 126, 0.06);
+}
+
+/* Polaroids styling */
+.polaroid-frame {
+  background: white;
+  padding: 12px 12px 36px 12px;
+  box-shadow: 0 12px 28px -6px rgba(26, 35, 126, 0.12), 0 4px 10px -2px rgba(26, 35, 126, 0.06);
+  border-radius: 12px;
+}
