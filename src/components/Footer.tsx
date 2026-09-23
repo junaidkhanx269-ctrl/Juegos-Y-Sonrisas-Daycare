@@ -21,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
   };
 
   return (
-    <footer className="bg-[#1A237E] text-white pt-16 pb-12 border-t-4 border-[#FFD60A]">
+    <footer className="bg-[#1A237E] text-white pt-16 pb-28 sm:pb-24 border-t-4 border-[#FFD60A] relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer Grid */}
@@ -189,16 +189,17 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
 
         </div>
 
-        {/* Bottom Legal Notice */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/60">
-          <div>
-            © {new Date().getFullYear()} {DAYCARE_INFO.name}. All rights reserved.
-          </div>
-          <div className="flex items-center gap-4">
+        {/* Bottom Legal Notice & Admin Access */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/70">
+          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
+            <span>© {new Date().getFullYear()} {DAYCARE_INFO.name}. All rights reserved.</span>
+            <span className="hidden sm:inline">·</span>
             <span>{DAYCARE_INFO.licenseState} #{DAYCARE_INFO.licenseNumber}</span>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <span>48 Hazelton St, Mattapan, MA 02126</span>
-            <span>·</span>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
             <a
               href="/admin/login"
               onClick={(e) => {
@@ -206,10 +207,10 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
                 window.history.pushState({}, '', '/admin/login');
                 window.dispatchEvent(new Event('popstate'));
               }}
-              className="text-[#FFD60A] hover:underline font-bold inline-flex items-center gap-1"
+              className="bg-[#FFD60A] hover:bg-[#FFE14D] text-[#1A237E] font-extrabold text-xs px-4 py-2 rounded-full shadow-md hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2 border border-white/30 cursor-pointer"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Panel</span>
+              <ShieldCheck className="w-4 h-4 text-[#8B4513]" />
+              <span>Admin Panel Login</span>
             </a>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Globe, Calendar, Menu, X } from 'lucide-react';
+import { Phone, Globe, Calendar, Menu, X, ShieldCheck } from 'lucide-react';
 import { Language } from '../types';
 import { DAYCARE_INFO } from '../data/translations';
 import { SmileyFace, BuildingBlocksIcon } from './Doodles';
@@ -130,11 +130,26 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenTourModal}
-              className="inline-flex items-center gap-1.5 bg-[#1A237E] hover:bg-[#283593] text-white text-xs sm:text-sm font-bold px-4 py-2 sm:py-2.5 rounded-full shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+              className="inline-flex items-center gap-1.5 bg-[#1A237E] hover:bg-[#283593] text-white text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <Calendar className="w-3.5 h-3.5 text-[#FFD60A]" />
               <span>{language === 'en' ? 'Schedule Tour' : 'Agendar Visita'}</span>
             </button>
+
+            {/* Admin Panel Quick Access Button */}
+            <a
+              href="/admin/login"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/admin/login');
+                window.dispatchEvent(new Event('popstate'));
+              }}
+              className="hidden md:inline-flex items-center gap-1.5 bg-[#8B4513] hover:bg-[#5D2E0C] text-[#FFF8DC] text-xs font-bold px-3 py-2 rounded-full shadow-xs hover:shadow transition-all hover:scale-105 border border-[#8B4513]/20"
+              title="Admin Panel Login"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#FFD60A]" />
+              <span>Admin</span>
+            </a>
 
             {/* Mobile Menu Toggle */}
             <button
@@ -170,6 +185,19 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Phone className="w-4 h-4 text-[#FF6B6B]" />
                   <span>{DAYCARE_INFO.phone}</span>
+                </a>
+                <a
+                  href="/admin/login"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMobileMenuOpen(false);
+                    window.history.pushState({}, '', '/admin/login');
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-[#8B4513] text-[#FFF8DC] font-bold py-2.5 rounded-xl border border-[#8B4513]/20"
+                >
+                  <ShieldCheck className="w-4 h-4 text-[#FFD60A]" />
+                  <span>Admin Panel Login</span>
                 </a>
                 <button
                   type="button"
