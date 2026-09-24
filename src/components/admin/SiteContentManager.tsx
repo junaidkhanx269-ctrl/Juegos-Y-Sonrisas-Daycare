@@ -17,7 +17,7 @@ export const SiteContentManager: React.FC = () => {
   const { siteContent, updateSiteContent } = useAdmin();
   const [formData, setFormData] = useState<SiteContent>(siteContent);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'rates' | 'banner'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'rates' | 'banner' | 'sections'>('info');
 
   const handleChange = (key: keyof SiteContent, value: any) => {
     setFormData((prev) => ({
@@ -99,6 +99,19 @@ export const SiteContentManager: React.FC = () => {
         >
           <Megaphone className="w-4 h-4" />
           <span>Announcement Banner</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('sections')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+            activeTab === 'sections'
+              ? 'bg-[#8B4513] text-white shadow-xs'
+              : 'bg-white text-[#1A237E] hover:bg-[#FFF8E7]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Section Titles & Text</span>
         </button>
       </div>
 
@@ -376,6 +389,148 @@ export const SiteContentManager: React.FC = () => {
               <div className="p-4 bg-gradient-to-r from-[#FFD60A] to-[#FF9F1C] rounded-2xl text-[#1A237E] font-bold text-xs flex items-center justify-between shadow-xs">
                 <span>Preview: {formData.announcementEn}</span>
                 <span className="text-[10px] bg-white/40 px-2 py-0.5 rounded-md">Live Bar</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: SECTION TITLES & TEXT */}
+        {activeTab === 'sections' && (
+          <div className="bg-white rounded-3xl p-6 shadow-sm border-2 border-[#8B4513]/15 space-y-6">
+            <h3 className="text-lg font-display font-bold text-[#1A237E] border-b border-[#8B4513]/15 pb-3 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#8B4513]" />
+              <span>Customize Website Sections and Headings</span>
+            </h3>
+
+            {/* Subsection 1: A Glimpse Inside */}
+            <div className="space-y-4 border-b border-[#8B4513]/10 pb-5">
+              <h4 className="text-sm font-bold text-[#8B4513]">Section 1: A Glimpse Inside (Our Learning Sanctuary)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Subtitle (English)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.galleryTitleEn || ''}
+                    onChange={(e) => handleChange('galleryTitleEn', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Subtitle (Spanish)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.galleryTitleEs || ''}
+                    onChange={(e) => handleChange('galleryTitleEs', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Main Title (English)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallerySubtitleEn || ''}
+                    onChange={(e) => handleChange('gallerySubtitleEn', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Main Title (Spanish)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gallerySubtitleEs || ''}
+                    onChange={(e) => handleChange('gallerySubtitleEs', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Subsection 2: Our Space */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-[#8B4513]">Section 2: Our Loving Space (Environment As Third Teacher)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Subtitle (English)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.spaceSubtitleEn || ''}
+                    onChange={(e) => handleChange('spaceSubtitleEn', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Subtitle (Spanish)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.spaceSubtitleEs || ''}
+                    onChange={(e) => handleChange('spaceSubtitleEs', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Main Title (English)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.spaceTitleEn || ''}
+                    onChange={(e) => handleChange('spaceTitleEn', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Main Title (Spanish)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.spaceTitleEs || ''}
+                    onChange={(e) => handleChange('spaceTitleEs', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Description (English)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.spaceDescEn || ''}
+                    onChange={(e) => handleChange('spaceDescEn', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase tracking-wider mb-1">
+                    Section Description (Spanish)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.spaceDescEs || ''}
+                    onChange={(e) => handleChange('spaceDescEs', e.target.value)}
+                    className="w-full px-3.5 py-2.5 border-2 border-[#8B4513]/20 rounded-xl text-xs font-bold text-[#1A237E] focus:outline-none focus:border-[#8B4513]"
+                  />
+                </div>
               </div>
             </div>
           </div>

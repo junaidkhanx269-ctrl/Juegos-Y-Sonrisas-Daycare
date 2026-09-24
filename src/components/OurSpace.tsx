@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Car, Trees, Palette, BookOpen, MapPin, CheckCircle, Info, ChevronRight } from 'lucide-react';
 import { Language, Hotspot } from '../types';
 import { SPACE_HOTSPOTS } from '../data/translations';
+import { useAdmin } from '../context/AdminContext';
 import heroClassroom from '../assets/images/hero_montessori_classroom_1790135121726.jpg';
 import backyardPlay from '../assets/images/daycare_backyard_play_1790135141749.jpg';
 import readingNook from '../assets/images/reading_nook_cozy_1790135186078.jpg';
@@ -12,6 +13,7 @@ interface OurSpaceProps {
 }
 
 export const OurSpace: React.FC<OurSpaceProps> = ({ language }) => {
+  const { siteContent } = useAdmin();
   const [activeHotspotId, setActiveHotspotId] = useState<string>('driveway');
   const [activeTab, setActiveTab] = useState<'classroom' | 'backyard' | 'reading' | 'art'>('classroom');
 
@@ -62,15 +64,19 @@ export const OurSpace: React.FC<OurSpaceProps> = ({ language }) => {
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-xs sm:text-sm font-bold tracking-widest text-[#2D6A4F] uppercase font-mono">
-            {language === 'en' ? 'Environment As The Third Teacher' : 'El Entorno como Tercer Maestro'}
+            {language === 'en' 
+              ? (siteContent.spaceSubtitleEn || 'Environment As The Third Teacher') 
+              : (siteContent.spaceSubtitleEs || 'El Entorno como Tercer Maestro')}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#1A237E] mt-2 mb-4">
-            {language === 'en' ? 'Our Loving Space at 48 Hazelton St' : 'Nuestro Espacio en 48 Hazelton St'}
+            {language === 'en' 
+              ? (siteContent.spaceTitleEn || 'Our Loving Space at 48 Hazelton St') 
+              : (siteContent.spaceTitleEs || 'Nuestro Espacio en 48 Hazelton St')}
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'
-              ? 'Thoughtfully arranged with natural woods, open daylight, child-height furnishings, and off-street parking designed for peaceful learning.'
-              : 'Diseñado meticulosamente con maderas naturales, luz natural, mobiliario a la altura del niño y estacionamiento privado para un día sin estrés.'}
+              ? (siteContent.spaceDescEn || 'Thoughtfully arranged with natural woods, open daylight, child-height furnishings, and off-street parking designed for peaceful learning.')
+              : (siteContent.spaceDescEs || 'Diseñado meticulosamente con maderas naturales, luz natural, mobiliario a la altura del niño y estacionamiento privado para un día sin estrés.')}
           </p>
         </div>
 

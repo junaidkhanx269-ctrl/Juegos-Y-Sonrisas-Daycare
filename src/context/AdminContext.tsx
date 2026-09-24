@@ -28,6 +28,16 @@ export interface SiteContent {
   preschoolRate: number;
   schoolAgeRate: number;
   extendedCareRate: number;
+  spaceSubtitleEn: string;
+  spaceSubtitleEs: string;
+  spaceTitleEn: string;
+  spaceTitleEs: string;
+  spaceDescEn: string;
+  spaceDescEs: string;
+  galleryTitleEn: string;
+  galleryTitleEs: string;
+  gallerySubtitleEn: string;
+  gallerySubtitleEs: string;
 }
 
 export const DEFAULT_SITE_CONTENT: SiteContent = {
@@ -49,6 +59,16 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   preschoolRate: 464,
   schoolAgeRate: 361,
   extendedCareRate: 104,
+  spaceSubtitleEn: 'Environment As The Third Teacher',
+  spaceSubtitleEs: 'El Entorno como Tercer Maestro',
+  spaceTitleEn: 'Our Loving Space at 48 Hazelton St',
+  spaceTitleEs: 'Nuestro Espacio en 48 Hazelton St',
+  spaceDescEn: 'Thoughtfully arranged with natural woods, open daylight, child-height furnishings, and off-street parking designed for peaceful learning.',
+  spaceDescEs: 'Diseñado meticulosamente con maderas naturales, luz natural, mobiliario a la altura del niño y estacionamiento privado para un día sin estrés.',
+  galleryTitleEn: 'A Glimpse Inside',
+  galleryTitleEs: 'Un Vistazo a Nuestro Mundo',
+  gallerySubtitleEn: 'Our Learning Sanctuary',
+  gallerySubtitleEs: 'Nuestro Refugio de Aprendizaje',
 };
 
 interface AdminContextType {

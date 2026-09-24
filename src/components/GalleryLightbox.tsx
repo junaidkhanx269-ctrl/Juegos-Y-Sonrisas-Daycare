@@ -25,7 +25,7 @@ interface GalleryItem {
 }
 
 export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ language }) => {
-  const { galleryImages, aboutImage } = useAdmin();
+  const { galleryImages, aboutImage, siteContent } = useAdmin();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [selectedImageIdx, setSelectedImageIdx] = useState<number | null>(null);
 
@@ -135,10 +135,14 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ language }) =>
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-10">
           <span className="text-xs sm:text-sm font-bold tracking-widest text-[#E07A5F] uppercase font-mono">
-            {language === 'en' ? 'A Glimpse Inside' : 'Un Vistazo a Nuestro Mundo'}
+            {language === 'en' 
+              ? (siteContent.galleryTitleEn || 'A Glimpse Inside') 
+              : (siteContent.galleryTitleEs || 'Un Vistazo a Nuestro Mundo')}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#1A237E] mt-2 mb-4">
-            {language === 'en' ? 'Our Learning Sanctuary' : 'Nuestro Refugio de Aprendizaje'}
+            {language === 'en' 
+              ? (siteContent.gallerySubtitleEn || 'Our Learning Sanctuary') 
+              : (siteContent.gallerySubtitleEs || 'Nuestro Refugio de Aprendizaje')}
           </h2>
           <p className="text-base text-[#1A237E]/75 leading-relaxed">
             {language === 'en'

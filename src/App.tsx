@@ -20,7 +20,7 @@ import { FAQAccordion } from './components/FAQAccordion';
 import { LocationContact } from './components/LocationContact';
 import { Footer } from './components/Footer';
 import { TourModal } from './components/TourModal';
-import { Phone, MessageCircle } from 'lucide-react';
+import { Phone, MessageCircle, ArrowUp } from 'lucide-react';
 import { DAYCARE_INFO } from './data/translations';
 
 import { AdminProvider } from './context/AdminContext';
@@ -31,6 +31,8 @@ function MainAppContent() {
   const [language, setLanguage] = useState<Language>('en');
   const [isTourModalOpen, setIsTourModalOpen] = useState<boolean>(false);
   const [preselectedProgramId, setPreselectedProgramId] = useState<string>('preschool-ready');
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
+  const [showBackToTop, setShowBackToTop] = useState<boolean>(false);
 
   // Simple client-side URL route state
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
@@ -42,6 +44,23 @@ function MainAppContent() {
     }
     return '/';
   });
+
+  // Scroll Progress tracker
+  useEffect(() => {
+    if (currentRoute !== '/') return;
+
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(progress);
+      }
+      setShowBackToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [currentRoute]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -103,6 +122,12 @@ function MainAppContent() {
   // Route 3: Public Daycare Website
   return (
     <div className="min-h-screen flex flex-col bg-[#FFF8E7] text-[#1A237E] font-sans antialiased selection:bg-[#FFD60A] selection:text-[#1A237E]">
+      {/* Fixed Scroll Progress Indicator */}
+      <div
+        className="fixed top-0 left-0 h-[4px] bg-gradient-to-r from-[#2D6A4F] to-[#FF6B6B] z-[100] transition-all duration-100 ease-out"
+        style={{ width: `${scrollProgress}%` }}
+      />
+
       {/* Top Bar / Navigation */}
       <Header
         language={language}
@@ -121,30 +146,30 @@ function MainAppContent() {
         {/* Section 3: About Amelia */}
         <AboutAmelia language={language} />
 
-        {/* Section 4: Our Space */}
+        {/* Section 4: Gallery & Lightbox (Our Learning Sanctuary) */}
+        <GalleryLightbox language={language} />
+
+        {/* Section 5: Our Space */}
         <OurSpace language={language} />
 
-        {/* Section 5: Programs & Tuition */}
+        {/* Section 6: Programs & Tuition */}
         <ProgramsTuition
           language={language}
           onSelectProgramForEnrollment={handleSelectProgramForEnrollment}
           onOpenTourModal={() => setIsTourModalOpen(true)}
         />
 
-        {/* Section 6: Daily Rhythm Timeline */}
+        {/* Section 7: Daily Rhythm Timeline */}
         <DailyRhythm language={language} />
 
-        {/* Section 7: Safety & Trust Certification Wall */}
+        {/* Section 8: Safety & Trust Certification Wall */}
         <SafetyTrust language={language} />
 
-        {/* Section 8: Enrollment Booking Form */}
+        {/* Section 9: Enrollment Booking Form */}
         <EnrollmentForm
           language={language}
           preselectedProgramId={preselectedProgramId}
         />
-
-        {/* Section 9: Gallery & Lightbox */}
-        <GalleryLightbox language={language} />
 
         {/* Section 10: Parent Voices / Testimonials */}
         <ParentVoices language={language} />
@@ -171,6 +196,18 @@ function MainAppContent() {
 
       {/* Floating Bottom Quick Contact Bar (Mobile & Desktop Accessible) */}
       <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+        {/* Fixed Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="w-12 h-12 rounded-full bg-[#1A237E] hover:bg-[#283593] text-[#FFD60A] shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-3 duration-300 cursor-pointer"
+            aria-label="Back to top"
+            title="Back to Top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+        )}
+
         <a
           href={DAYCARE_INFO.whatsappUrl}
           target="_blank"
