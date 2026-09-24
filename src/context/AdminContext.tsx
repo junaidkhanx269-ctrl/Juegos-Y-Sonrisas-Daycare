@@ -484,7 +484,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     cleanUrl = sanitizeUrl(cleanUrl);
 
-    if (cleanUrl === DEFAULT_URL || !cleanUrl.includes('supabase.co')) {
+    if (!cleanUrl.includes('supabase.co') && !cleanUrl.startsWith('http')) {
       throw new Error('Please enter a valid Supabase Project URL ending in .supabase.co (e.g. https://your-project.supabase.co)');
     }
 

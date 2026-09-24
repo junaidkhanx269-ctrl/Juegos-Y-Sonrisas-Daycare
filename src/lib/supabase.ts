@@ -74,11 +74,11 @@ export const reinitSupabase = (url: string, key: string) => {
 };
 
 export const isSupabaseConfigured = () => {
-  return (
+  return Boolean(
     supabaseUrl &&
-    supabaseUrl !== DEFAULT_URL &&
     supabaseAnonKey &&
-    supabaseAnonKey !== DEFAULT_KEY &&
-    supabaseUrl.includes('supabase.co')
+    supabaseAnonKey !== 'placeholder-key' &&
+    supabaseAnonKey !== 'YOUR_ANON_KEY' &&
+    (supabaseUrl.includes('supabase.co') || supabaseUrl.startsWith('http'))
   );
 };
