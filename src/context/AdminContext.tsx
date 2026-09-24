@@ -164,6 +164,40 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(isSupabaseConfigured());
 
+  // Self-heal broken/deleted images using client Base64 backup
+  const healImage = async (url: string): Promise<string> => {
+    if (!url || !url.startsWith('/uploads/')) return url;
+    const backup = localStorage.getItem(`backup_image_${url}`);
+    if (!backup) return url;
+    try {
+      const fileName = url.split('/').pop() || 'image.jpg';
+      const folderPrefix = url.includes('gallery/') ? 'gallery/' : '';
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName,
+          fileData: backup,
+          folderPrefix,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.url) {
+          localStorage.setItem(`backup_image_${data.url}`, backup);
+          if (data.url !== url) {
+            localStorage.removeItem(`backup_image_${url}`);
+          }
+          return data.url;
+        }
+      }
+    } catch (e) {
+      console.warn('Auto-healing image failed:', e);
+    }
+    return url;
+  };
+
   // Load config and settings from server or Supabase on mount
   useEffect(() => {
     const initData = async () => {
@@ -212,36 +246,140 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const settingsRes = await fetch('/api/settings');
         if (settingsRes.ok) {
           const settings = await settingsRes.json();
-          if (settings.hero_image) {
-            setHeroImage(settings.hero_image);
-            localStorage.setItem('site_hero_image', settings.hero_image);
+
+          // Check for local storage customized data
+          const localHero = localStorage.getItem('site_hero_image');
+          const localAbout = localStorage.getItem('site_about_image');
+          const localGallery = localStorage.getItem('site_gallery_images');
+          const localContent = localStorage.getItem('site_content_data');
+
+          let hasLocalCustomizations = false;
+          if (localHero && localHero !== DEFAULT_HERO_IMAGE) hasLocalCustomizations = true;
+          if (localAbout && localAbout !== DEFAULT_ABOUT_IMAGE) hasLocalCustomizations = true;
+          if (localGallery) {
+            try {
+              const parsedLocal = JSON.parse(localGallery);
+              if (Array.isArray(parsedLocal) && parsedLocal.length > 0) {
+                if (parsedLocal.length !== DEFAULT_GALLERY.length || parsedLocal[0].url !== DEFAULT_GALLERY[0].url) {
+                  hasLocalCustomizations = true;
+                }
+              }
+            } catch (e) {}
           }
-          if (settings.about_image) {
-            setAboutImage(settings.about_image);
-            localStorage.setItem('site_about_image', settings.about_image);
+          if (localContent) {
+            try {
+              const parsedLocal = JSON.parse(localContent);
+              if (parsedLocal && typeof parsedLocal === 'object' && Object.keys(parsedLocal).length > 0) {
+                const keys = Object.keys(parsedLocal) as Array<keyof SiteContent>;
+                const isDifferent = keys.some(k => parsedLocal[k] !== DEFAULT_SITE_CONTENT[k]);
+                if (isDifferent) {
+                  hasLocalCustomizations = true;
+                }
+              }
+            } catch (e) {}
           }
+
+          // Check if server returned default settings
+          let serverIsDefault = true;
+          if (settings.hero_image && settings.hero_image !== DEFAULT_HERO_IMAGE) serverIsDefault = false;
+          if (settings.about_image && settings.about_image !== DEFAULT_ABOUT_IMAGE) serverIsDefault = false;
           if (settings.gallery_images) {
             try {
-              const parsed = typeof settings.gallery_images === 'string'
+              const parsedServer = typeof settings.gallery_images === 'string'
                 ? JSON.parse(settings.gallery_images)
                 : settings.gallery_images;
-              if (Array.isArray(parsed)) {
-                setGalleryImages(parsed);
-                localStorage.setItem('site_gallery_images', JSON.stringify(parsed));
+              if (Array.isArray(parsedServer) && parsedServer.length > 0) {
+                if (parsedServer.length !== DEFAULT_GALLERY.length || parsedServer[0].url !== DEFAULT_GALLERY[0].url) {
+                  serverIsDefault = false;
+                }
               }
             } catch (e) {}
           }
           if (settings.site_content_data) {
-            try {
-              const parsed = typeof settings.site_content_data === 'string'
-                ? JSON.parse(settings.site_content_data)
-                : settings.site_content_data;
-              if (parsed && typeof parsed === 'object') {
-                const merged = { ...DEFAULT_SITE_CONTENT, ...parsed };
-                setSiteContent(merged);
-                localStorage.setItem('site_content_data', JSON.stringify(merged));
-              }
-            } catch (e) {}
+            serverIsDefault = false;
+          }
+
+          if (hasLocalCustomizations && serverIsDefault) {
+            console.log('Detected server reset. Self-healing uploaded images and restoring text contents...');
+
+            let healedHero = localHero || DEFAULT_HERO_IMAGE;
+            if (localHero && localHero.startsWith('/uploads/')) {
+              healedHero = await healImage(localHero);
+            }
+
+            let healedAbout = localAbout || DEFAULT_ABOUT_IMAGE;
+            if (localAbout && localAbout.startsWith('/uploads/')) {
+              healedAbout = await healImage(localAbout);
+            }
+
+            let healedGallery = DEFAULT_GALLERY;
+            if (localGallery) {
+              try {
+                const parsedLocal = JSON.parse(localGallery) as GalleryImageItem[];
+                healedGallery = await Promise.all(
+                  parsedLocal.map(async (item) => {
+                    if (item.url.startsWith('/uploads/')) {
+                      const newUrl = await healImage(item.url);
+                      return { ...item, url: newUrl };
+                    }
+                    return item;
+                  })
+                );
+              } catch (e) {}
+            }
+
+            setHeroImage(healedHero);
+            localStorage.setItem('site_hero_image', healedHero);
+            await saveSetting('hero_image', healedHero);
+
+            setAboutImage(healedAbout);
+            localStorage.setItem('site_about_image', healedAbout);
+            await saveSetting('about_image', healedAbout);
+
+            setGalleryImages(healedGallery);
+            const galStr = JSON.stringify(healedGallery);
+            localStorage.setItem('site_gallery_images', galStr);
+            await saveSetting('gallery_images', galStr);
+
+            if (localContent) {
+              const parsedContent = JSON.parse(localContent);
+              setSiteContent(parsedContent);
+              localStorage.setItem('site_content_data', localContent);
+              await saveSetting('site_content_data', localContent);
+            }
+          } else {
+            // Normal server-to-client settings synchronization
+            if (settings.hero_image) {
+              setHeroImage(settings.hero_image);
+              localStorage.setItem('site_hero_image', settings.hero_image);
+            }
+            if (settings.about_image) {
+              setAboutImage(settings.about_image);
+              localStorage.setItem('site_about_image', settings.about_image);
+            }
+            if (settings.gallery_images) {
+              try {
+                const parsed = typeof settings.gallery_images === 'string'
+                  ? JSON.parse(settings.gallery_images)
+                  : settings.gallery_images;
+                if (Array.isArray(parsed)) {
+                  setGalleryImages(parsed);
+                  localStorage.setItem('site_gallery_images', JSON.stringify(parsed));
+                }
+              } catch (e) {}
+            }
+            if (settings.site_content_data) {
+              try {
+                const parsed = typeof settings.site_content_data === 'string'
+                  ? JSON.parse(settings.site_content_data)
+                  : settings.site_content_data;
+                if (parsed && typeof parsed === 'object') {
+                  const merged = { ...DEFAULT_SITE_CONTENT, ...parsed };
+                  setSiteContent(merged);
+                  localStorage.setItem('site_content_data', JSON.stringify(merged));
+                }
+              } catch (e) {}
+            }
           }
         }
       } catch (err) {
@@ -392,6 +530,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const { url, isSupabase } = await uploadImageFile(file);
       setHeroImage(url);
       localStorage.setItem('site_hero_image', url);
+      
+      // Store Base64 backup for self-healing if it is a local upload URL
+      if (url.startsWith('/uploads/')) {
+        const base64 = await fileToBase64(file);
+        localStorage.setItem(`backup_image_${url}`, base64);
+      }
+
       await saveSetting('hero_image', url);
 
       return {
@@ -413,6 +558,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const { url, isSupabase } = await uploadImageFile(file);
       setAboutImage(url);
       localStorage.setItem('site_about_image', url);
+
+      // Store Base64 backup for self-healing if it is a local upload URL
+      if (url.startsWith('/uploads/')) {
+        const base64 = await fileToBase64(file);
+        localStorage.setItem(`backup_image_${url}`, base64);
+      }
+
       await saveSetting('about_image', url);
 
       return {
@@ -438,6 +590,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
         uploadedAt: new Date().toISOString(),
       };
+
+      // Store Base64 backup for self-healing if it is a local upload URL
+      if (url.startsWith('/uploads/')) {
+        const base64 = await fileToBase64(file);
+        localStorage.setItem(`backup_image_${url}`, base64);
+      }
 
       const updatedGallery = [newItem, ...galleryImages];
       setGalleryImages(updatedGallery);

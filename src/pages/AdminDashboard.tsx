@@ -19,6 +19,7 @@ import { GalleryManager } from '../components/admin/GalleryManager';
 import { SupabaseSetupGuide } from '../components/admin/SupabaseSetupGuide';
 import { SiteContentManager } from '../components/admin/SiteContentManager';
 import { InquiryManager } from '../components/admin/InquiryManager';
+import { AdminCredentialsManager } from '../components/admin/AdminCredentialsManager';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -35,7 +36,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
     resetImagesToDefault,
   } = useAdmin();
 
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'content' | 'hero' | 'about' | 'gallery' | 'supabase'>('inquiries');
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'content' | 'hero' | 'about' | 'gallery' | 'supabase' | 'security'>('inquiries');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -44,6 +45,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
     { id: 'hero', label: 'Hero Image Manager', icon: ImageIcon, badge: 'Main Banner' },
     { id: 'about', label: 'About Amelia Image', icon: UserCheck, badge: 'Director Bio' },
     { id: 'gallery', label: 'Gallery Manager', icon: Grid, badge: 'Photos' },
+    { id: 'security', label: 'Admin Credentials', icon: ShieldCheck, badge: 'Security' },
     { id: 'supabase', label: 'Supabase & SQL Setup', icon: Database, badge: 'Cloud Sync' },
   ];
 
@@ -195,6 +197,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
             )}
 
             {activeTab === 'gallery' && <GalleryManager />}
+
+            {activeTab === 'security' && <AdminCredentialsManager />}
 
             {activeTab === 'supabase' && <SupabaseSetupGuide />}
           </main>

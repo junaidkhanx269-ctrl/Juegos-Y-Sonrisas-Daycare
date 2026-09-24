@@ -12,12 +12,31 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        localStorage.setItem('isAdmin', 'true');
+        localStorage.setItem('adminSessionTime', new Date().toISOString());
+        onLoginSuccess();
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Invalid credentials. Please check email & password.');
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      // Fallback to static client login if server API is not available
       const cleanEmail = email.trim().toLowerCase();
       if ((cleanEmail === 'vargas.amelia31@gmail.com' || cleanEmail === 'admin@juegosysonrisas.com') && password === 'Admin@2024') {
         localStorage.setItem('isAdmin', 'true');
@@ -27,7 +46,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
         setError('Invalid credentials. Please check email & password.');
         setIsSubmitting(false);
       }
-    }, 400);
+    }
   };
 
   return (

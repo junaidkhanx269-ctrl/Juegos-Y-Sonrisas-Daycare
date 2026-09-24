@@ -13,10 +13,19 @@ const DATA_DIR = path.join(ROOT_DIR, 'data');
 const UPLOADS_DIR = path.join(ROOT_DIR, 'public', 'uploads');
 const SETTINGS_FILE = path.join(DATA_DIR, 'site_settings.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'supabase_config.json');
+const ADMIN_CREDENTIALS_FILE = path.join(DATA_DIR, 'admin_credentials.json');
 
 // Ensure storage directories exist
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// Ensure default admin credentials exist
+if (!fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+  fs.writeFileSync(ADMIN_CREDENTIALS_FILE, JSON.stringify({
+    email: 'vargas.amelia31@gmail.com',
+    password: 'Admin@2024'
+  }, null, 2));
+}
 
 // Default settings
 const DEFAULT_SETTINGS = {
@@ -538,6 +547,58 @@ app.post('/api/smtp', (req, res) => {
 
   fs.writeFileSync(SMTP_CONFIG_FILE, JSON.stringify(currentSmtp, null, 2));
   res.json({ success: true, message: 'SMTP settings updated successfully!' });
+});
+
+// API 10: Admin Login Check
+app.post('/api/admin/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Missing email or password' });
+  }
+
+  let creds = { email: 'vargas.amelia31@gmail.com', password: 'Admin@2024' };
+  if (fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+    try {
+      creds = JSON.parse(fs.readFileSync(ADMIN_CREDENTIALS_FILE, 'utf-8'));
+    } catch (e) {}
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanCredsEmail = creds.email.trim().toLowerCase();
+
+  if ((cleanEmail === cleanCredsEmail || cleanEmail === 'admin@juegosysonrisas.com') && password === creds.password) {
+    res.json({ success: true, message: 'Authenticated successfully!' });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials. Please check email & password.' });
+  }
+});
+
+// API 11: Get Admin Credentials (Only Email for security)
+app.get('/api/admin/credentials', (_req, res) => {
+  let email = 'vargas.amelia31@gmail.com';
+  if (fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+    try {
+      const creds = JSON.parse(fs.readFileSync(ADMIN_CREDENTIALS_FILE, 'utf-8'));
+      if (creds.email) email = creds.email;
+    } catch (e) {}
+  }
+  res.json({ email });
+});
+
+// API 12: Update Admin Credentials
+app.post('/api/admin/update-credentials', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const newCreds = {
+    email: email.trim().toLowerCase(),
+    password: password.trim()
+  };
+
+  fs.writeFileSync(ADMIN_CREDENTIALS_FILE, JSON.stringify(newCreds, null, 2));
+  res.json({ success: true, message: 'Admin credentials updated successfully!' });
 });
 
 // Start server
