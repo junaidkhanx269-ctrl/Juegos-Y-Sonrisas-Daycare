@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ShieldCheck, ArrowLeft, Sparkles, KeyRound } from 'lucide-react';
+import { Lock, Mail, ShieldCheck, ArrowLeft, Sparkles } from 'lucide-react';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -7,8 +7,8 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNavigateHome }) => {
-  const [email, setEmail] = useState('admin@juegosysonrisas.com');
-  const [password, setPassword] = useState('Admin@2024');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,12 +28,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
         setIsSubmitting(false);
       }
     }, 400);
-  };
-
-  const fillDemoCredentials = () => {
-    setEmail('admin@juegosysonrisas.com');
-    setPassword('Admin@2024');
-    setError(null);
   };
 
   return (
@@ -65,29 +59,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
         <div className="bg-white py-8 px-6 shadow-xl rounded-3xl border-2 border-[#8B4513]/20 sm:px-10 relative overflow-hidden">
           {/* Decorative Top Stripe */}
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#8B4513] via-[#FFD60A] to-[#8B4513]" />
-
-          {/* Preset Credentials Hint Box */}
-          <div className="mb-6 p-3.5 bg-[#FFF8DC] rounded-2xl border border-[#8B4513]/30 text-xs text-[#5D2E0C] flex items-start justify-between gap-2">
-            <div className="space-y-1">
-              <div className="font-bold flex items-center gap-1.5 text-[#8B4513]">
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Default Admin Credentials:</span>
-              </div>
-              <div className="font-mono text-[11px]">
-                Email: <span className="font-bold">admin@juegosysonrisas.com</span>
-              </div>
-              <div className="font-mono text-[11px]">
-                Pass: <span className="font-bold">Admin@2024</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="text-[10px] font-bold uppercase bg-[#8B4513] text-white px-2.5 py-1 rounded-lg hover:bg-[#5D2E0C] transition-colors shrink-0"
-            >
-              Autofill
-            </button>
-          </div>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl animate-fade-in text-center">
