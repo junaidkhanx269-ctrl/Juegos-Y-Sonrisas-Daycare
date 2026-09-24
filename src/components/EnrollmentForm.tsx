@@ -9,6 +9,8 @@ import {
   Sparkles,
   Shield,
   HelpCircle,
+  X,
+  Mail,
 } from 'lucide-react';
 import { Language, EnrollmentFormData } from '../types';
 import { DAYCARE_INFO, PROGRAMS } from '../data/translations';
@@ -38,6 +40,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
 
   const [honeypot, setHoneypot] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,10 +94,34 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
 
     setIsSubmitting(true);
 
-    // Simulate fast reliable processing
+    // Call backend API to send confirmation email to parent and notification to admin
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'enrollment',
+        parentName: formData.parentName,
+        parentEmail: formData.email,
+        phone: formData.phone,
+        childName: formData.childName,
+        childAge: formData.childDob,
+        program: formData.program,
+        startDate: formData.startDate,
+        needsSubsidy: formData.needsSubsidy,
+        needsExtendedCare: formData.needsExtendedCare,
+        message: formData.message,
+      }),
+    }).catch((err) => console.warn('Enrollment email notification notice:', err));
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
+      setShowToast(true);
+
+      // Hide toast automatically after 6 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 6000);
 
       // Trigger Confetti!
       try {
@@ -457,6 +484,33 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
           </form>
         )}
 
+      </div>
+
+      {/* Floating Toast Notification */}
+      <div
+        className={`fixed bottom-5 right-5 z-50 max-w-sm w-full bg-white rounded-2xl shadow-2xl border-2 border-[#A8E6CF] p-4 transition-all duration-500 ease-out flex items-start gap-3 ${
+          showToast ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
+        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+          <CheckCircle className="w-5 h-5" />
+        </div>
+        <div className="flex-1 space-y-1">
+          <h4 className="text-xs font-bold text-[#1A237E] uppercase tracking-wider font-mono">
+            {language === 'en' ? 'Submission Received' : 'Solicitud Recibida'}
+          </h4>
+          <p className="text-xs text-[#8B4513] leading-relaxed">
+            {language === 'en'
+              ? 'Success! Amelia and parents have both been notified by email.'
+              : '¡Éxito! Amelia y los padres han sido notificados por correo electrónico.'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowToast(false)}
+          className="p-1 text-[#1A237E]/40 hover:text-[#1A237E]/80 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </section>
   );

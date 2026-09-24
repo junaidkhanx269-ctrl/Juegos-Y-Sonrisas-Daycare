@@ -34,7 +34,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   name: 'Juegos Y Sonrisas Daycare',
   director: 'Amelia M Vargas',
   phone: '+1 (857) 361-8923',
-  email: 'info@juegosysonrisas.com',
+  email: 'Vargas.amelia31@gmail.com',
   address: '48 Hazelton St, Mattapan, MA 02126',
   licenseNumber: '9142647',
   licenseState: 'Massachusetts Family Childcare License',

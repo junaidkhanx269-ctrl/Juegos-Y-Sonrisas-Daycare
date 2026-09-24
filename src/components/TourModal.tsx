@@ -46,6 +46,22 @@ export const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, language 
     setError('');
     setSubmitted(true);
 
+    // Call backend API to send confirmation email to parent and notification to admin
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'tour',
+        parentName,
+        parentEmail: email,
+        phone,
+        childAge,
+        selectedDate,
+        selectedTime,
+        tourType,
+      }),
+    }).catch((err) => console.warn('Tour email notification notice:', err));
+
     try {
       confetti({
         particleCount: 80,
@@ -173,18 +189,33 @@ export const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, language 
 
             {/* Form Fields */}
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-[#1A237E] uppercase font-mono mb-1">
-                  {language === 'en' ? 'Your Name *' : 'Su Nombre *'}
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Elena Thorne"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#1A237E]/20 bg-[#FFF8E7]/30 text-xs sm:text-sm text-[#1A237E] focus:outline-none focus:ring-2 focus:ring-[#1A237E]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase font-mono mb-1">
+                    {language === 'en' ? 'Your Name *' : 'Su Nombre *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Elena Thorne"
+                    value={parentName}
+                    onChange={(e) => setParentName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#1A237E]/20 bg-[#FFF8E7]/30 text-xs sm:text-sm text-[#1A237E] focus:outline-none focus:ring-2 focus:ring-[#1A237E]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#1A237E] uppercase font-mono mb-1">
+                    {language === 'en' ? 'Email Address *' : 'Correo Electrónico *'}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="parent@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#1A237E]/20 bg-[#FFF8E7]/30 text-xs sm:text-sm text-[#1A237E] focus:outline-none focus:ring-2 focus:ring-[#1A237E]"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

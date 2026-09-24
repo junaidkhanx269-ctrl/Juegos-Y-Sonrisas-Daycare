@@ -8,7 +8,7 @@ export const DAYCARE_INFO = {
   neighborhood: 'Mattapan, Boston, MA',
   phone: '+1 (857) 361-8923',
   phoneRaw: '8573618923',
-  email: 'info@juegosysonrisas.com',
+  email: 'Vargas.amelia31@gmail.com',
   director: 'Amelia M Vargas',
   licenseNumber: '9142647',
   licenseState: 'Massachusetts Family Childcare License',

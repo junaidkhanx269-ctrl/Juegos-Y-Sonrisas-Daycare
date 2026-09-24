@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import nodemailer from "nodemailer";
 dotenv.config();
 var app = express();
 var PORT = process.env.PORT || 3e3;
@@ -222,6 +223,225 @@ app.post("/api/upload", async (req, res) => {
     console.error("Upload error", err);
     res.status(500).json({ error: err.message || "Upload failed" });
   }
+});
+var INQUIRIES_FILE = path.join(DATA_DIR, "inquiries.json");
+var ADMIN_EMAIL = "Vargas.amelia31@gmail.com";
+app.post("/api/send-email", async (req, res) => {
+  try {
+    const {
+      type = "tour",
+      parentName,
+      parentEmail,
+      phone,
+      childName,
+      childAge,
+      program,
+      selectedDate,
+      selectedTime,
+      startDate,
+      tourType = "in-person",
+      needsSubsidy,
+      needsExtendedCare,
+      message
+    } = req.body;
+    if (!parentName || !parentEmail && !phone) {
+      return res.status(400).json({ error: "Missing parent name, email or phone" });
+    }
+    const inquiryRecord = {
+      id: `inq-${Date.now()}`,
+      type,
+      parentName,
+      parentEmail: parentEmail || "Not provided",
+      phone: phone || "Not provided",
+      childName: childName || "N/A",
+      childAge: childAge || "N/A",
+      program: program || "N/A",
+      selectedDate: selectedDate || "N/A",
+      selectedTime: selectedTime || "N/A",
+      startDate: startDate || "N/A",
+      tourType,
+      needsSubsidy: Boolean(needsSubsidy),
+      needsExtendedCare: Boolean(needsExtendedCare),
+      message: message || "",
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      status: "new"
+    };
+    let inquiries = [];
+    if (fs.existsSync(INQUIRIES_FILE)) {
+      try {
+        inquiries = JSON.parse(fs.readFileSync(INQUIRIES_FILE, "utf-8"));
+      } catch (e) {
+      }
+    }
+    inquiries.unshift(inquiryRecord);
+    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2));
+    const conf = getSupabaseConfig();
+    if (conf.isConfigured) {
+      try {
+        const client = safeServerSupabaseClient(conf.url, conf.key);
+        if (client) {
+          await client.from("inquiries").insert([
+            {
+              id: inquiryRecord.id,
+              type: inquiryRecord.type,
+              parent_name: inquiryRecord.parentName,
+              parent_email: inquiryRecord.parentEmail,
+              phone: inquiryRecord.phone,
+              child_name: inquiryRecord.childName,
+              child_age: inquiryRecord.childAge,
+              program: inquiryRecord.program,
+              selected_date: inquiryRecord.selectedDate,
+              selected_time: inquiryRecord.selectedTime,
+              details: JSON.stringify(inquiryRecord),
+              created_at: inquiryRecord.createdAt
+            }
+          ]);
+        }
+      } catch (err) {
+        console.warn("Could not insert inquiry into Supabase inquiries table:", err);
+      }
+    }
+    let smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    let smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
+    let smtpUser = process.env.SMTP_USER || "";
+    let smtpPass = process.env.SMTP_PASS || "";
+    const SMTP_CONFIG_FILE2 = path.join(DATA_DIR, "smtp_config.json");
+    if (fs.existsSync(SMTP_CONFIG_FILE2)) {
+      try {
+        const fileSmtp = JSON.parse(fs.readFileSync(SMTP_CONFIG_FILE2, "utf-8"));
+        if (fileSmtp.host) smtpHost = fileSmtp.host;
+        if (fileSmtp.port) smtpPort = parseInt(fileSmtp.port, 10);
+        if (fileSmtp.user) smtpUser = fileSmtp.user;
+        if (fileSmtp.pass) smtpPass = fileSmtp.pass;
+      } catch (e) {
+        console.error("Error reading SMTP config file", e);
+      }
+    }
+    if (smtpUser && smtpPass) {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        }
+      });
+      const isTour = type === "tour";
+      const subjectAdmin = isTour ? `\u{1F4C5} New Tour Request: ${parentName} (${selectedDate} @ ${selectedTime})` : `\u{1F4DD} New Enrollment Application: ${childName || parentName}`;
+      const subjectParent = isTour ? `\u2728 Tour Request Received - Juegos Y Sonrisas Daycare` : `\u2728 Application Received - Juegos Y Sonrisas Daycare`;
+      const htmlAdmin = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1A237E; max-width: 600px; border: 1px solid #FFD60A; border-radius: 12px;">
+          <h2 style="color: #1A237E;">${isTour ? "\u{1F4C5} New Tour Request" : "\u{1F4DD} New Enrollment Application"}</h2>
+          <p>You received a new inquiry from <strong>${parentName}</strong>!</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;" />
+          <ul style="line-height: 1.8;">
+            <li><strong>Parent Name:</strong> ${parentName}</li>
+            <li><strong>Parent Email:</strong> ${parentEmail || "N/A"}</li>
+            <li><strong>Phone Number:</strong> ${phone || "N/A"}</li>
+            ${isTour ? `
+              <li><strong>Tour Type:</strong> ${tourType}</li>
+              <li><strong>Preferred Date:</strong> ${selectedDate}</li>
+              <li><strong>Preferred Time:</strong> ${selectedTime}</li>
+              <li><strong>Child's Age:</strong> ${childAge || "N/A"}</li>
+            ` : `
+              <li><strong>Child's Name:</strong> ${childName || "N/A"}</li>
+              <li><strong>Child's DOB:</strong> ${childAge || "N/A"}</li>
+              <li><strong>Program Selected:</strong> ${program || "N/A"}</li>
+              <li><strong>Estimated Start Date:</strong> ${startDate || "N/A"}</li>
+              <li><strong>Needs State Voucher/Subsidy:</strong> ${needsSubsidy ? "Yes" : "No"}</li>
+              <li><strong>Needs Extended Hours:</strong> ${needsExtendedCare ? "Yes" : "No"}</li>
+              ${message ? `<li><strong>Notes:</strong> ${message}</li>` : ""}
+            `}
+          </ul>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;" />
+          <p style="font-size: 12px; color: #666;">Juegos Y Sonrisas Daycare Admin Notification</p>
+        </div>
+      `;
+      const htmlParent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1A237E; max-width: 600px; border: 1px solid #A8E6CF; border-radius: 12px;">
+          <h2 style="color: #1A237E;">Hola ${parentName}! \u{1F389}</h2>
+          <p>Thank you for reaching out to <strong>Juegos Y Sonrisas Daycare</strong> in Mattapan, MA!</p>
+          <p>${isTour ? `Amelia M Vargas has received your tour request for <strong>${selectedDate} at ${selectedTime}</strong>.` : "Amelia M Vargas has received your child enrollment application."}</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;" />
+          <p><strong>Director Contact:</strong> Amelia M Vargas</p>
+          <p><strong>Phone / WhatsApp:</strong> +1 (857) 361-8923</p>
+          <p><strong>Email:</strong> Vargas.amelia31@gmail.com</p>
+          <p><strong>Address:</strong> 48 Hazelton St, Mattapan, MA 02126</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;" />
+          <p style="font-size: 13px; color: #444;">We look forward to meeting you and your little one soon!</p>
+        </div>
+      `;
+      await transporter.sendMail({
+        from: `"Juegos Y Sonrisas Web" <${smtpUser}>`,
+        to: ADMIN_EMAIL,
+        subject: subjectAdmin,
+        html: htmlAdmin
+      });
+      if (parentEmail && parentEmail.includes("@")) {
+        await transporter.sendMail({
+          from: `"Juegos Y Sonrisas Daycare" <${smtpUser}>`,
+          to: parentEmail,
+          subject: subjectParent,
+          html: htmlParent
+        });
+      }
+    } else {
+      console.log("\u{1F4E7} Inquiry recorded. (Set SMTP_USER & SMTP_PASS in .env to enable live email delivery)");
+    }
+    res.json({ success: true, inquiry: inquiryRecord });
+  } catch (err) {
+    console.error("Email sending exception:", err);
+    res.status(500).json({ error: err.message || "Error processing email notification" });
+  }
+});
+app.get("/api/inquiries", (_req, res) => {
+  let inquiries = [];
+  if (fs.existsSync(INQUIRIES_FILE)) {
+    try {
+      inquiries = JSON.parse(fs.readFileSync(INQUIRIES_FILE, "utf-8"));
+    } catch (e) {
+    }
+  }
+  res.json(inquiries);
+});
+app.get("/api/smtp", (_req, res) => {
+  let host = "smtp.gmail.com";
+  let port = 587;
+  let user = "";
+  let hasPass = false;
+  if (fs.existsSync(SMTP_CONFIG_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(SMTP_CONFIG_FILE, "utf-8"));
+      if (data.host) host = data.host;
+      if (data.port) port = parseInt(data.port, 10);
+      if (data.user) user = data.user;
+      if (data.pass) hasPass = true;
+    } catch (e) {
+    }
+  }
+  res.json({ host, port, user, hasPass });
+});
+app.post("/api/smtp", (req, res) => {
+  const { host, port, user, pass } = req.body;
+  if (!host || !user) {
+    return res.status(400).json({ error: "Missing SMTP Host or Email User" });
+  }
+  let currentSmtp = { host: "smtp.gmail.com", port: 587, user: "", pass: "" };
+  if (fs.existsSync(SMTP_CONFIG_FILE)) {
+    try {
+      currentSmtp = JSON.parse(fs.readFileSync(SMTP_CONFIG_FILE, "utf-8"));
+    } catch (e) {
+    }
+  }
+  currentSmtp.host = host.trim();
+  currentSmtp.port = parseInt(port || "587", 10);
+  currentSmtp.user = user.trim();
+  if (pass !== void 0) {
+    currentSmtp.pass = pass;
+  }
+  fs.writeFileSync(SMTP_CONFIG_FILE, JSON.stringify(currentSmtp, null, 2));
+  res.json({ success: true, message: "SMTP settings updated successfully!" });
 });
 async function start() {
   if (process.env.NODE_ENV !== "production") {

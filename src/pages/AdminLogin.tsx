@@ -19,7 +19,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
 
     setTimeout(() => {
       const cleanEmail = email.trim().toLowerCase();
-      if (cleanEmail === 'admin@juegosysonrisas.com' && password === 'Admin@2024') {
+      if ((cleanEmail === 'vargas.amelia31@gmail.com' || cleanEmail === 'admin@juegosysonrisas.com') && password === 'Admin@2024') {
         localStorage.setItem('isAdmin', 'true');
         localStorage.setItem('adminSessionTime', new Date().toISOString());
         onLoginSuccess();
@@ -81,7 +81,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onNaviga
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-4 py-3 border-2 border-[#8B4513]/20 rounded-xl text-sm font-medium text-[#1A237E] placeholder-[#8B4513]/40 focus:outline-none focus:border-[#8B4513] focus:ring-1 focus:ring-[#8B4513]"
-                  placeholder="admin@juegosysonrisas.com"
+                  placeholder="Vargas.amelia31@gmail.com"
                 />
               </div>
             </div>

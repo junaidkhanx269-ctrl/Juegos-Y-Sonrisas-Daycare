@@ -18,6 +18,7 @@ import { ImageManager } from '../components/admin/ImageManager';
 import { GalleryManager } from '../components/admin/GalleryManager';
 import { SupabaseSetupGuide } from '../components/admin/SupabaseSetupGuide';
 import { SiteContentManager } from '../components/admin/SiteContentManager';
+import { InquiryManager } from '../components/admin/InquiryManager';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -34,11 +35,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
     resetImagesToDefault,
   } = useAdmin();
 
-  const [activeTab, setActiveTab] = useState<'content' | 'hero' | 'about' | 'gallery' | 'supabase'>('content');
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'content' | 'hero' | 'about' | 'gallery' | 'supabase'>('inquiries');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { id: 'content', label: 'Site Content & Rates', icon: FileText, badge: 'Editable Text' },
+    { id: 'inquiries', label: 'Inquiries & Leads', icon: FileText, badge: 'New Submissions' },
+    { id: 'content', label: 'Site Content & Rates', icon: Sparkles, badge: 'Editable Text' },
     { id: 'hero', label: 'Hero Image Manager', icon: ImageIcon, badge: 'Main Banner' },
     { id: 'about', label: 'About Amelia Image', icon: UserCheck, badge: 'Director Bio' },
     { id: 'gallery', label: 'Gallery Manager', icon: Grid, badge: 'Photos' },
@@ -168,6 +170,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onNavi
 
           {/* Main Content Workspace */}
           <main className="lg:col-span-9 space-y-6">
+            {activeTab === 'inquiries' && <InquiryManager />}
+
             {activeTab === 'content' && <SiteContentManager />}
 
             {activeTab === 'hero' && (
