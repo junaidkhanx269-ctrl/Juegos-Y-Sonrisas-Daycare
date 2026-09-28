@@ -603,32 +603,51 @@ app.post('/api/admin/update-credentials', (req, res) => {
 
 // Start server
 async function start() {
-  if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'custom',
-    });
+  const distIndexPath = path.join(ROOT_DIR, 'dist', 'index.html');
+  const hasDist = fs.existsSync(distIndexPath);
+  const isExplicitDev = process.env.NODE_ENV === 'development';
 
-    app.use(vite.middlewares);
+  if (!hasDist || isExplicitDev) {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'custom',
+      });
 
-    app.use('*', async (req, res, next) => {
-      const url = req.originalUrl;
-      try {
-        let template = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-      } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
-        next(e);
+      app.use(vite.middlewares);
+
+      app.use('*', async (req, res, next) => {
+        const url = req.originalUrl;
+        try {
+          let template = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf-8');
+          template = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        } catch (e) {
+          vite.ssrFixStacktrace(e as Error);
+          next(e);
+        }
+      });
+    } catch (err) {
+      console.warn('Vite dev server failed to start, falling back to static:', err);
+      if (hasDist) {
+        app.use(express.static(path.join(ROOT_DIR, 'dist')));
+        app.get('*', (_req, res) => {
+          res.sendFile(distIndexPath);
+        });
       }
-    });
+    }
   } else {
     app.use(express.static(path.join(ROOT_DIR, 'dist')));
     app.get('*', (_req, res) => {
-      res.sendFile(path.join(ROOT_DIR, 'dist', 'index.html'));
+      res.sendFile(distIndexPath);
     });
   }
+
+  app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('Unhandled server error:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  });
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on http://0.0.0.0:${PORT}`);

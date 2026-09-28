@@ -13,8 +13,15 @@ var DATA_DIR = path.join(ROOT_DIR, "data");
 var UPLOADS_DIR = path.join(ROOT_DIR, "public", "uploads");
 var SETTINGS_FILE = path.join(DATA_DIR, "site_settings.json");
 var CONFIG_FILE = path.join(DATA_DIR, "supabase_config.json");
+var ADMIN_CREDENTIALS_FILE = path.join(DATA_DIR, "admin_credentials.json");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+  fs.writeFileSync(ADMIN_CREDENTIALS_FILE, JSON.stringify({
+    email: "vargas.amelia31@gmail.com",
+    password: "Admin@2024"
+  }, null, 2));
+}
 var DEFAULT_SETTINGS = {
   hero_image: "/images/amelia-hero.jpg",
   about_image: "/images/amelia-hero.jpg",
@@ -443,31 +450,91 @@ app.post("/api/smtp", (req, res) => {
   fs.writeFileSync(SMTP_CONFIG_FILE, JSON.stringify(currentSmtp, null, 2));
   res.json({ success: true, message: "SMTP settings updated successfully!" });
 });
+app.post("/api/admin/login", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Missing email or password" });
+  }
+  let creds = { email: "vargas.amelia31@gmail.com", password: "Admin@2024" };
+  if (fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+    try {
+      creds = JSON.parse(fs.readFileSync(ADMIN_CREDENTIALS_FILE, "utf-8"));
+    } catch (e) {
+    }
+  }
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanCredsEmail = creds.email.trim().toLowerCase();
+  if ((cleanEmail === cleanCredsEmail || cleanEmail === "admin@juegosysonrisas.com") && password === creds.password) {
+    res.json({ success: true, message: "Authenticated successfully!" });
+  } else {
+    res.status(401).json({ error: "Invalid credentials. Please check email & password." });
+  }
+});
+app.get("/api/admin/credentials", (_req, res) => {
+  let email = "vargas.amelia31@gmail.com";
+  if (fs.existsSync(ADMIN_CREDENTIALS_FILE)) {
+    try {
+      const creds = JSON.parse(fs.readFileSync(ADMIN_CREDENTIALS_FILE, "utf-8"));
+      if (creds.email) email = creds.email;
+    } catch (e) {
+    }
+  }
+  res.json({ email });
+});
+app.post("/api/admin/update-credentials", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+  const newCreds = {
+    email: email.trim().toLowerCase(),
+    password: password.trim()
+  };
+  fs.writeFileSync(ADMIN_CREDENTIALS_FILE, JSON.stringify(newCreds, null, 2));
+  res.json({ success: true, message: "Admin credentials updated successfully!" });
+});
 async function start() {
-  if (process.env.NODE_ENV !== "production") {
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "custom"
-    });
-    app.use(vite.middlewares);
-    app.use("*", async (req, res, next) => {
-      const url = req.originalUrl;
-      try {
-        let template = fs.readFileSync(path.join(ROOT_DIR, "index.html"), "utf-8");
-        template = await vite.transformIndexHtml(url, template);
-        res.status(200).set({ "Content-Type": "text/html" }).end(template);
-      } catch (e) {
-        vite.ssrFixStacktrace(e);
-        next(e);
+  const distIndexPath = path.join(ROOT_DIR, "dist", "index.html");
+  const hasDist = fs.existsSync(distIndexPath);
+  const isExplicitDev = process.env.NODE_ENV === "development";
+  if (!hasDist || isExplicitDev) {
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "custom"
+      });
+      app.use(vite.middlewares);
+      app.use("*", async (req, res, next) => {
+        const url = req.originalUrl;
+        try {
+          let template = fs.readFileSync(path.join(ROOT_DIR, "index.html"), "utf-8");
+          template = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ "Content-Type": "text/html" }).end(template);
+        } catch (e) {
+          vite.ssrFixStacktrace(e);
+          next(e);
+        }
+      });
+    } catch (err) {
+      console.warn("Vite dev server failed to start, falling back to static:", err);
+      if (hasDist) {
+        app.use(express.static(path.join(ROOT_DIR, "dist")));
+        app.get("*", (_req, res) => {
+          res.sendFile(distIndexPath);
+        });
       }
-    });
+    }
   } else {
     app.use(express.static(path.join(ROOT_DIR, "dist")));
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(ROOT_DIR, "dist", "index.html"));
+      res.sendFile(distIndexPath);
     });
   }
+  app.use((err, _req, res, _next) => {
+    console.error("Unhandled server error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  });
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server listening on http://0.0.0.0:${PORT}`);
   });
