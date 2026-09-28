@@ -1,23 +1,32 @@
+DirectoryIndex index.php dist/index.html index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # 1. If file or folder exists directly in root directory, serve it directly
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  # 1. Do not rewrite if already targeting index.php or dist/index.html
+  RewriteRule ^(index\.php|dist/index\.html)$ - [L]
+
+  # 2. If requested file exists in root, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # 3. If requested directory exists in root (and is not root itself), serve it directly
+  RewriteCond %{REQUEST_URI} !^/?$
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 2. If the file exists inside dist/, serve from dist/
+  # 4. If file exists inside dist/, serve from dist/
   RewriteCond %{REQUEST_URI} !^/dist/
   RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
   RewriteRule ^(.*)$ dist/$1 [L]
 
-  # 3. If directory exists inside dist/, serve from dist/
-  RewriteCond %{REQUEST_URI} !^/dist/
-  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -d
-  RewriteRule ^(.*)$ dist/$1/ [L]
+  # 5. Route SPA requests to index.php if index.php exists
+  RewriteCond %{DOCUMENT_ROOT}/index.php -f [OR]
+  RewriteCond index.php -f
+  RewriteRule ^ index.php [L]
 
-  # 4. Fallback all SPA routes to dist/index.html (never loop if already dist/index.html)
+  # 6. Fallback if index.php does not exist: route to dist/index.html
   RewriteCond %{REQUEST_URI} !^/dist/index\.html$
   RewriteRule ^ dist/index.html [L]
 </IfModule>
@@ -25,4 +34,6 @@
 <IfModule mod_mime.c>
   AddType application/javascript .js .mjs
   AddType text/css .css
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
 </IfModule>

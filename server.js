@@ -57226,6 +57226,12 @@ app.post("/api/admin/update-credentials", (req, res) => {
   res.json({ success: true, message: "Admin credentials updated successfully!" });
 });
 async function start() {
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err);
+  });
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  });
   const distIndexPath = path3.join(ROOT_DIR, "dist", "index.html");
   const hasDist = fs4.existsSync(distIndexPath);
   const isExplicitDev = process.env.NODE_ENV === "development";
@@ -57255,7 +57261,7 @@ async function start() {
         }
       });
     } catch (err) {
-      console.warn("Vite dev server unavailable, checking static fallback:", err);
+      console.warn("Vite dev server unavailable, using static fallback:", err);
       if (hasDist) {
         app.use(import_express.default.static(path3.join(ROOT_DIR, "dist")));
         app.get("*", (_req, res) => {
@@ -57272,8 +57278,12 @@ async function start() {
     console.error("Unhandled server error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   });
-  const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server listening on http://0.0.0.0:${PORT}`);
+  const rawPort = process.env.PORT || 3e3;
+  const isPipeOrSocket = typeof rawPort === "string" && isNaN(Number(rawPort));
+  const server = isPipeOrSocket ? app.listen(rawPort, () => {
+    console.log(`Server listening on socket: ${rawPort}`);
+  }) : app.listen(Number(rawPort), () => {
+    console.log(`Server listening on port: ${rawPort}`);
   });
   process.on("SIGTERM", () => {
     server.close(() => {
