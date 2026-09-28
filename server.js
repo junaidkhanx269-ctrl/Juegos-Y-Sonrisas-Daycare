@@ -1,3 +1,4 @@
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -57228,7 +57229,13 @@ async function start() {
   const distIndexPath = path3.join(ROOT_DIR, "dist", "index.html");
   const hasDist = fs4.existsSync(distIndexPath);
   const isExplicitDev = process.env.NODE_ENV === "development";
-  if (!hasDist || isExplicitDev) {
+  if (hasDist && !isExplicitDev) {
+    console.log("Serving production build from dist/");
+    app.use(import_express.default.static(path3.join(ROOT_DIR, "dist")));
+    app.get("*", (_req, res) => {
+      res.sendFile(distIndexPath);
+    });
+  } else {
     try {
       const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
@@ -57248,26 +57255,30 @@ async function start() {
         }
       });
     } catch (err) {
-      console.warn("Vite dev server failed to start, falling back to static:", err);
+      console.warn("Vite dev server unavailable, checking static fallback:", err);
       if (hasDist) {
         app.use(import_express.default.static(path3.join(ROOT_DIR, "dist")));
         app.get("*", (_req, res) => {
           res.sendFile(distIndexPath);
         });
+      } else {
+        app.get("*", (_req, res) => {
+          res.status(200).send("<!doctype html><html><body><h1>Juegos Y Sonrisas Daycare</h1><p>Starting server... Please run npm run build to compile assets.</p></body></html>");
+        });
       }
     }
-  } else {
-    app.use(import_express.default.static(path3.join(ROOT_DIR, "dist")));
-    app.get("*", (_req, res) => {
-      res.sendFile(distIndexPath);
-    });
   }
   app.use((err, _req, res, _next) => {
     console.error("Unhandled server error:", err);
     res.status(500).json({ error: "Internal Server Error" });
   });
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server listening on http://0.0.0.0:${PORT}`);
+  });
+  process.on("SIGTERM", () => {
+    server.close(() => {
+      console.log("Process terminated");
+    });
   });
 }
 start();

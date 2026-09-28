@@ -2,18 +2,27 @@
   RewriteEngine On
   RewriteBase /
 
-  # 1. If requesting dist directly, allow
-  RewriteRule ^dist/(.*)$ dist/$1 [L]
-
-  # 2. If the file exists directly in dist/, serve it
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
-  RewriteRule ^(.*)$ dist/$1 [L]
-
-  # 3. If file exists in current directory, serve it
-  RewriteCond %{REQUEST_FILENAME} -f
+  # 1. If file or folder exists directly in root directory, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 4. Fallback all routes (SPA like /admin, /tours, /) to dist/index.html
+  # 2. If the file exists inside dist/, serve from dist/
+  RewriteCond %{REQUEST_URI} !^/dist/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ dist/$1 [L]
+
+  # 3. If directory exists inside dist/, serve from dist/
+  RewriteCond %{REQUEST_URI} !^/dist/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -d
+  RewriteRule ^(.*)$ dist/$1/ [L]
+
+  # 4. Fallback all SPA routes to dist/index.html (never loop if already dist/index.html)
+  RewriteCond %{REQUEST_URI} !^/dist/index\.html$
   RewriteRule ^ dist/index.html [L]
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
 </IfModule>
