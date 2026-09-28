@@ -1,8 +1,19 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+
+  # 1. If requesting dist directly, allow
+  RewriteRule ^dist/(.*)$ dist/$1 [L]
+
+  # 2. If the file exists directly in dist/, serve it
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
+  RewriteRule ^(.*)$ dist/$1 [L]
+
+  # 3. If file exists in current directory, serve it
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # 4. Fallback all routes (SPA like /admin, /tours, /) to dist/index.html
+  RewriteRule ^ dist/index.html [L]
 </IfModule>
